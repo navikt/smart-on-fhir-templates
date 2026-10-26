@@ -12,17 +12,31 @@ Node 22 (`.nvmrc`).
 
 ## 2. Configure
 
-Put the `.env` from your team packet in this folder, or `cp .env.example .env` and fill in ([.env.example](./.env.example)).
+```sh
+cp .env.example .env
+```
+
+Edit `.env` and set `CLIENT_ID` to a name of your own, e.g. `yourname-backend` ([.env.example](./.env.example)).
 
 ```sh
 PORT=3100
 FHIR_BASE_URL=https://epj.ekstern.dev.nav.no/fhir
 AUTH_ISSUER=https://epj.ekstern.dev.nav.no/oidc
-CLIENT_ID=your-client-id
+CLIENT_ID=yourname-backend
 SCOPES=system/Patient.rs
-PRIVATE_JWK_PATH=keys/backend-key.private.jwk.json
+PRIVATE_JWK_PATH=keys/private.jwk.json
 PATIENT_IDENTIFIER=urn:oid:2.16.578.1.12.4.1.4.1|20856210112
 ```
+
+Generate your key pair:
+
+```sh
+npm run generate-key
+```
+
+The private key stays in `keys/` on your machine and is never shared. The public key is calculated from the private key, and that is what you give the host.
+
+Tell the host your `CLIENT_ID` and the public JWK Set it prints. Wait for the go-ahead before launching.
 
 ## 3. Run the reference
 
@@ -59,7 +73,7 @@ Keep the private JWK in `keys/` (ignored by Git).
 
 ## 6. Registration
 
-Your packet's client is registered with these values. It has no launch or redirect URL.
+The host registers these values for your `CLIENT_ID`. It has no launch or redirect URL.
 
 | Field | Value |
 |---|---|

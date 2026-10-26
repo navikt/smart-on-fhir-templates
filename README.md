@@ -2,6 +2,15 @@
 
 Starter apps for building a SMART on FHIR app and launching it in nav-epj.
 
+## Before you start
+
+The host registers every app by hand in nav-epj, so you need a few things first:
+
+1. Get your own test clinician login from the host. One login per person, never share it.
+2. Pick a `CLIENT_ID` of your own, e.g. `yourname-public`.
+3. `client-secret`: pick a simple `CLIENT_SECRET`. `private-key-jwt` and `backend-services`: run `npm run generate-key` in the folder you pick below.
+4. Tell the host your client ID, the variant, and the secret or the public JWK Set. When the host says it is registered, it works.
+
 ## Get started
 
 1. Click **Use this template** > **Create a new repository**, and create a public or private repo under your own GitHub account.
@@ -12,13 +21,13 @@ Starter apps for building a SMART on FHIR app and launching it in nav-epj.
    cd <your-repo>
    ```
 
-3. Pick the folder that matches your team packet:
+3. Pick the folder for the auth type you want to try:
 
    | Folder | Client auth | Use when |
    |---|---|---|
-   | [public/](./public/) | `none` | Your registration has no secret or key |
-   | [client-secret/](./client-secret/) | `client_secret_basic` | Your packet has a `CLIENT_SECRET` |
-   | [private-key-jwt/](./private-key-jwt/) | `private_key_jwt` | Your packet has a private JWK |
+   | [public/](./public/) | `none` | Simplest: no secret or key, PKCE only |
+   | [client-secret/](./client-secret/) | `client_secret_basic` | You pick a `CLIENT_SECRET` |
+   | [private-key-jwt/](./private-key-jwt/) | `private_key_jwt` | You generate a key pair with `npm run generate-key` |
    | [backend-services/](./backend-services/) | `private_key_jwt` + `client_credentials` | You build a system-to-system app without EHR launch |
 
 4. Follow the README in that folder. The short version:

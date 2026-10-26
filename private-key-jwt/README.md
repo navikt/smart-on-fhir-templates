@@ -1,6 +1,6 @@
 # Key-pair EHR-launch starter
 
-Token endpoint authentication `private_key_jwt`: sign a client assertion with the private key from your packet.
+Token endpoint authentication `private_key_jwt`: sign a client assertion with your own private key.
 
 ## 1. Install
 
@@ -12,17 +12,31 @@ Node 22 (`.nvmrc`).
 
 ## 2. Configure
 
-Put the `.env` from your team packet in this folder, or `cp .env.example .env` and fill in ([.env.example](./.env.example)).
+```sh
+cp .env.example .env
+```
+
+Edit `.env` and set `CLIENT_ID` to a name of your own, e.g. `yourname-key` ([.env.example](./.env.example)).
 
 ```sh
 PORT=3100
 FHIR_BASE_URL=https://epj.ekstern.dev.nav.no/fhir
 AUTH_ISSUER=https://epj.ekstern.dev.nav.no/oidc
-CLIENT_ID=your-client-id
+CLIENT_ID=yourname-key
 REDIRECT_URI=http://localhost:3100/callback
 SCOPES=openid fhirUser launch patient/Patient.r patient/Encounter.s
-PRIVATE_JWK_PATH=keys/launch-key.private.jwk.json
+PRIVATE_JWK_PATH=keys/private.jwk.json
 ```
+
+Generate your key pair:
+
+```sh
+npm run generate-key
+```
+
+The private key stays in `keys/` on your machine and is never shared. The public key is calculated from the private key, and that is what you give the host.
+
+Tell the host your `CLIENT_ID` and the public JWK Set it prints. Wait for the go-ahead before launching.
 
 ## 3. Run the reference
 
@@ -32,7 +46,7 @@ npm run start:reference
 
 ## 4. Launch
 
-Log in at https://epj.ekstern.dev.nav.no, open a patient marked "Pågår nå" and pick your app.
+Log in at https://epj.ekstern.dev.nav.no with your own test clinician, open a patient marked "Pågår nå" and pick your app.
 
 ## 5. Build your own
 
@@ -59,7 +73,7 @@ Keep the private JWK in `keys/` (ignored by Git).
 
 ## 6. Registration
 
-Your packet's client is registered with these values. Ask the host to add scopes or a second port.
+The host registers these values for your `CLIENT_ID`. Ask the host to add scopes or a second port.
 
 | Field | Value |
 |---|---|

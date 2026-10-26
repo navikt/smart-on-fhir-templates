@@ -3,7 +3,9 @@
 | Symptom | Fix |
 |---|---|
 | `TODO n` / HTTP 501 | Implement that step in `src/steps.ts`, or compare with `src/reference.ts` |
-| Startup configuration error | Fill in `.env` for your variant |
+| `Configuration problem in .env` | Fix the listed variables, see "Before you start" in [README.md](./README.md) |
+| `invalid_client` or unknown client | The host may not have registered it yet. Ask the host to confirm the registration |
+| `Launch token was issued for another organisation.` | You switched organisation in another tab, or someone else uses your login. Log in with your own clinician and relaunch |
 | `Launch iss ... does not match FHIR_BASE_URL` | Set `FHIR_BASE_URL` to the `iss` shown, exactly |
 | Unknown client or rejected redirect | Match client ID, auth method and URIs to your registration |
 | Missing state or pending launch | Start a fresh launch from the app picker in the same browser |

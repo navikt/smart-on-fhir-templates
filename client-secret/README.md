@@ -12,17 +12,23 @@ Node 22 (`.nvmrc`).
 
 ## 2. Configure
 
-Put the `.env` from your team packet in this folder, or `cp .env.example .env` and fill in ([.env.example](./.env.example)).
+```sh
+cp .env.example .env
+```
+
+Edit `.env` and set `CLIENT_ID` to a name of your own, e.g. `yourname-secret` ([.env.example](./.env.example)). Set `CLIENT_SECRET` to a simple secret you pick.
 
 ```sh
 PORT=3100
 FHIR_BASE_URL=https://epj.ekstern.dev.nav.no/fhir
 AUTH_ISSUER=https://epj.ekstern.dev.nav.no/oidc
-CLIENT_ID=your-client-id
+CLIENT_ID=yourname-secret
 REDIRECT_URI=http://localhost:3100/callback
 SCOPES=openid fhirUser launch patient/Patient.r patient/Encounter.s
-CLIENT_SECRET=your-client-secret
+CLIENT_SECRET=pick-a-simple-secret
 ```
+
+Tell the host your `CLIENT_ID` and `CLIENT_SECRET`. Wait for the go-ahead before launching.
 
 ## 3. Run the reference
 
@@ -32,7 +38,7 @@ npm run start:reference
 
 ## 4. Launch
 
-Log in at https://epj.ekstern.dev.nav.no, open a patient marked "Pågår nå" and pick your app.
+Log in at https://epj.ekstern.dev.nav.no with your own test clinician, open a patient marked "Pågår nå" and pick your app.
 
 ## 5. Build your own
 
@@ -55,7 +61,7 @@ Authorization: Basic base64(client_id:client_secret)
 
 ## 6. Registration
 
-Your packet's client is registered with these values. Ask the host to add scopes or a second port.
+The host registers these values for your `CLIENT_ID`. Ask the host to add scopes or a second port.
 
 | Field | Value |
 |---|---|
