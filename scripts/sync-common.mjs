@@ -7,7 +7,8 @@ const root = fileURLToPath(new URL("../", import.meta.url));
 const common = [
   "package.json", "package-lock.json", "tsconfig.json", ".gitignore", ".npmrc", ".nvmrc",
   "src/config.ts", "src/http.ts", "src/types.ts", "src/reference.ts",
-  "src/extensions.ts", "src/server.ts", "src/main.ts", "test/fixture.ts", "test/helpers.test.ts",
+  "src/extensions.ts", "src/server.ts", "src/main.ts", "src/generate-key.ts", "test/fixture.ts", "test/helpers.test.ts",
+  "test/generate-key.test.ts",
 ];
 const ehr = [
   "src/app.ts", "src/steps.ts", "test/launch.test.ts", "test/clinical.test.ts",

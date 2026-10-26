@@ -35,12 +35,19 @@ export function trustedUrl(value: string): URL {
   return url;
 }
 
+export function configProblems(error: unknown): string[] | undefined {
+  if (error instanceof z.ZodError) {
+    return error.issues.map(i => `${i.path.join(".") || "config"}: ${i.message}`);
+  }
+  return error instanceof AppError ? [error.message] : undefined;
+}
+
 export function readConfig(env = process.env): Config {
   const values = z.object({
     PORT: z.coerce.number().int().min(1024).max(65535).default(3100),
     FHIR_BASE_URL: z.url(),
     AUTH_ISSUER: z.url(),
-    CLIENT_ID: z.string().min(1).refine(v => !v.startsWith("replace-"), "Set your assigned CLIENT_ID"),
+    CLIENT_ID: z.string().min(1).refine(v => !v.startsWith("replace-"), "Set CLIENT_ID in .env to the client ID the host registered for you"),
     REDIRECT_URI: z.url().default("http://localhost:3100/callback"),
     SCOPES: z.string().trim().min(1),
     CLIENT_SECRET: z.string().min(1).optional(),
@@ -52,10 +59,10 @@ export function readConfig(env = process.env): Config {
   trustedUrl(values.REDIRECT_URI);
   const selected: Variant = variant;
   if (selected === "client-secret" && !values.CLIENT_SECRET) {
-    throw new AppError(400, "Set CLIENT_SECRET from your team credential packet.");
+    throw new AppError(400, "Set CLIENT_SECRET in .env to the secret you gave the host.");
   }
   if ((selected === "private-key-jwt" || selected === "backend-services") && !values.PRIVATE_JWK_PATH) {
-    throw new AppError(400, "Set PRIVATE_JWK_PATH to your team's private JWK file.");
+    throw new AppError(400, "Set PRIVATE_JWK_PATH in .env (run npm run generate-key to create the key).");
   }
   if (selected === "backend-services" &&
       (!values.PATIENT_IDENTIFIER || values.SCOPES.split(/\s+/).some(s => !s.startsWith("system/")))) {

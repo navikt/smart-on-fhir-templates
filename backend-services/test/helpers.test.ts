@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { age, bundle, fhirUrl, patientSchema, referenceId } from "../src/http.ts";
 import { fixture } from "./fixture.ts";
-import { readConfig } from "../src/config.ts";
+import { configProblems, readConfig } from "../src/config.ts";
 
 test("Scaffolding: host configuration is validated without event access", async t => {
   const f = await fixture();
@@ -16,6 +16,8 @@ test("Scaffolding: host configuration is validated without event access", async 
   assert.equal(config.variant, f.config.variant);
   assert.equal(config.port, 3100);
   assert.throws(() => readConfig({ ...env, CLIENT_ID: "" }));
+  assert.throws(() => readConfig({ ...env, CLIENT_ID: "replace-me" }), error =>
+    configProblems(error)?.[0] === "CLIENT_ID: Set CLIENT_ID in .env to the client ID the host registered for you");
   assert.throws(() => readConfig({ ...env, FHIR_BASE_URL: "http://insecure.example/fhir" }));
   if (config.variant === "client-secret") {
     assert.throws(() => readConfig({ ...env, CLIENT_SECRET: undefined }));

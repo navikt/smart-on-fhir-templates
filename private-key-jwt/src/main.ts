@@ -1,6 +1,18 @@
-import { readConfig } from "./config.ts";
+import { configProblems, readConfig } from "./config.ts";
 import { buildApp } from "./app.ts";
 
-const config = readConfig();
+function loadConfig() {
+  try {
+    return readConfig();
+  } catch (error) {
+    const problems = configProblems(error);
+    if (!problems) throw error;
+    console.error(["Configuration problem in .env:", ...problems.map(p => `- ${p}`),
+      'See "Before you start" in README.md'].join("\n"));
+    process.exit(1);
+  }
+}
+
+const config = loadConfig();
 const app = await buildApp(config, process.argv.includes("--reference"));
 await app.listen({ port: config.port, host: "127.0.0.1" });
