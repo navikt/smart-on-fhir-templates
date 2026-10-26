@@ -59,15 +59,12 @@ Keep the private JWK in `keys/` (ignored by Git).
 
 ## 6. Registration
 
-The host registers this for you. Compare it with your packet.
+Your packet's client is registered with these values. It has no launch or redirect URL.
 
-```json
-{
-  "tokenEndpointAuthMethod": "private_key_jwt",
-  "jwkSet": { "keys": ["<your public JWK>"] },
-  "grantTypes": ["client_credentials"],
-  "scopes": ["system/Patient.rs"]
-}
-```
+| Field | Value |
+|---|---|
+| Token endpoint auth | `private_key_jwt` with your public JWK |
+| Grant type | `client_credentials` |
+| Scopes | `system/Patient.rs` |
 
 [Exercises](../EXERCISES.md) · [Troubleshooting](../TROUBLESHOOTING.md)

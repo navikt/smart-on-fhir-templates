@@ -55,17 +55,13 @@ Authorization: Basic base64(client_id:client_secret)
 
 ## 6. Registration
 
-The host registers this for you. Compare it with your packet.
+Your packet's client is registered with these values. Ask the host to add scopes or a second port.
 
-```json
-{
-  "tokenEndpointAuthMethod": "client_secret_basic",
-  "launchUri": "http://localhost:3100/launch",
-  "redirectUris": ["http://localhost:3100/callback"],
-  "launchMode": "tab",
-  "grantTypes": ["authorization_code"],
-  "scopes": ["openid", "fhirUser", "launch", "patient/Patient.r", "patient/Encounter.s"]
-}
-```
+| Field | Value |
+|---|---|
+| Token endpoint auth | `client_secret_basic` |
+| Launch URL | `http://localhost:3100/launch` |
+| Redirect URL | `http://localhost:3100/callback` |
+| Scopes | `openid fhirUser launch patient/Patient.r patient/Encounter.s` |
 
 [Exercises](../EXERCISES.md) · [Troubleshooting](../TROUBLESHOOTING.md)
