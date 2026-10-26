@@ -1,31 +1,30 @@
 # SMART on FHIR hackathon starters
 
-Participants build their own app and launch it in nav-epj. The starters are local apps,
-not production services or test assignments. The host supplies registrations and keys on the day.
+Starter apps for building a SMART on FHIR app and launching it in nav-epj.
 
-| Folder | Client authentication |
-|---|---|
-| [public/](./public/) | `none` |
-| [client-secret/](./client-secret/) | `client_secret_basic` |
-| [private-key-jwt/](./private-key-jwt/) | `private_key_jwt` |
-| [backend-services/](./backend-services/) | `private_key_jwt` with `client_credentials`, no EHR launch |
+Click *Use this template*, then pick a folder:
 
-Each folder is a standalone Node 22 / TypeScript / Fastify project. Participants copy one whole folder,
-dotfiles included, and follow its `GUIDE.md` and `EXERCISES.md`. The folders stage the separate public
-template repository required by [the track contract](../docs/smart-hackathon-contract.md).
+| Folder | Client auth | Use when |
+|---|---|---|
+| [public/](./public/) | `none` | Your registration has no secret or key |
+| [client-secret/](./client-secret/) | `client_secret_basic` | Your packet has a `CLIENT_SECRET` |
+| [private-key-jwt/](./private-key-jwt/) | `private_key_jwt` | Your packet has a private JWK |
+| [backend-services/](./backend-services/) | `private_key_jwt` + `client_credentials` | You build a system-to-system app without EHR launch |
+
+```sh
+cd public && npm ci && cp .env.example .env && npm run start:reference
+```
+
+- [EXERCISES.md](./EXERCISES.md): Bronze, Silver and Gold ideas
+- [TROUBLESHOOTING.md](./TROUBLESHOOTING.md): errors and test patients
+- [Published track](https://hl7norway.github.io/Norwegian-FHIR-Hackathon-2026/currentbuild/smart-track.html)
 
 ## Maintainers
 
-Edit shared files only in `public/`. Then run from this directory:
+Edit shared files in `public/`, then propagate them:
 
 ```sh
 node scripts/sync-common.mjs
 ```
 
-This overwrites the common files in the other variants and keeps their READMEs, `variant.ts`,
-client-authentication tests and the backend-specific app. CI fails if it leaves a diff.
-
-From a starter, `npm test` and `npm run typecheck` check our reference code against a local mock
-with temporary keys. They do not grade participant apps and do not replace a live rehearsal
-against the host's nav-epj. The event data is the 32-patient roster in
-[docs/hackathon-roster.md](../docs/hackathon-roster.md), scoped per session organisation.
+CI fails on drift. In a variant, `npm test` and `npm run typecheck` check the reference code against a local mock.

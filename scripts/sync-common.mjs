@@ -6,9 +6,8 @@ import { fileURLToPath } from "node:url";
 const root = fileURLToPath(new URL("../", import.meta.url));
 const common = [
   "package.json", "package-lock.json", "tsconfig.json", ".gitignore", ".npmrc", ".nvmrc",
-  "GUIDE.md", "EXERCISES.md", "src/config.ts", "src/http.ts", "src/types.ts", "src/reference.ts",
+  "src/config.ts", "src/http.ts", "src/types.ts", "src/reference.ts",
   "src/extensions.ts", "src/server.ts", "src/main.ts", "test/fixture.ts", "test/helpers.test.ts",
-  "test/README.md",
 ];
 const ehr = [
   "src/app.ts", "src/steps.ts", "test/launch.test.ts", "test/clinical.test.ts",

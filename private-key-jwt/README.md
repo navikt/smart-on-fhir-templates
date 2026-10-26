@@ -1,14 +1,76 @@
 # Key-pair EHR-launch starter
 
-Build a SMART app that signs a client assertion with the private key supplied by the host
-(`private_key_jwt`). The host registers the public key. PKCE still applies.
+Token endpoint authentication `private_key_jwt`: sign a client assertion with the private key from your packet.
 
-1. Use Node 22 and run `npm ci`.
-2. Configure it as described in [GUIDE.md](./GUIDE.md), with `PRIVATE_JWK_PATH` pointing to your private JWK.
-3. Build your app from `src/steps.ts`, and run `npm start`.
+## 1. Install
 
-The reference accepts the RSA 3072 / RS384 key from nav-epj or an EC P-384 / ES384 key, with a
-matching `alg`, `use: sig` and `kid`. The host registers `tokenEndpointAuthMethod: private_key_jwt`
-and `grantTypes: [authorization_code]` with the public JWK Set inline as `jwkSet`, plus the launch and
-redirect URLs from the guide. Do not generate replacement keys or commit the private key.
-Feature ideas are in [EXERCISES.md](./EXERCISES.md).
+```sh
+npm ci
+```
+
+Node 22 (`.nvmrc`).
+
+## 2. Configure
+
+Put the `.env` from your team packet in this folder, or `cp .env.example .env` and fill in ([.env.example](./.env.example)).
+
+```sh
+PORT=3100
+FHIR_BASE_URL=https://epj.ekstern.dev.nav.no/fhir
+AUTH_ISSUER=https://epj.ekstern.dev.nav.no/oidc
+CLIENT_ID=your-client-id
+REDIRECT_URI=http://localhost:3100/callback
+SCOPES=openid fhirUser launch patient/Patient.r patient/Encounter.s
+PRIVATE_JWK_PATH=keys/launch-key.private.jwk.json
+```
+
+## 3. Run the reference
+
+```sh
+npm run start:reference
+```
+
+## 4. Launch
+
+Log in at https://epj.ekstern.dev.nav.no, open a patient marked "Pågår nå" and pick your app.
+
+## 5. Build your own
+
+Implement the TODOs in [src/steps.ts](./src/steps.ts), then run `npm start`.
+
+```ts
+pkce() {
+  return unfinished(3, "Generate a random PKCE verifier and its base64url SHA-256 challenge");
+},
+```
+
+The matching function is `pkce` in [src/reference.ts](./src/reference.ts).
+
+Sign a client assertion for the token request (`clientAssertion` in [src/reference.ts](./src/reference.ts)):
+
+```json
+{
+  "header": { "alg": "RS384", "typ": "JWT", "kid": "<kid from your JWK>" },
+  "claims": { "iss": "<client id>", "sub": "<client id>", "aud": "<token endpoint>", "jti": "<random uuid>", "exp": "<now + 2 min>" }
+}
+```
+
+Keep the private JWK in `keys/` (ignored by Git).
+
+## 6. Registration
+
+The host registers this for you. Compare it with your packet.
+
+```json
+{
+  "tokenEndpointAuthMethod": "private_key_jwt",
+  "jwkSet": { "keys": ["<your public JWK>"] },
+  "launchUri": "http://localhost:3100/launch",
+  "redirectUris": ["http://localhost:3100/callback"],
+  "launchMode": "tab",
+  "grantTypes": ["authorization_code"],
+  "scopes": ["openid", "fhirUser", "launch", "patient/Patient.r", "patient/Encounter.s"]
+}
+```
+
+[Exercises](../EXERCISES.md) · [Troubleshooting](../TROUBLESHOOTING.md)

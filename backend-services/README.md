@@ -1,15 +1,73 @@
 # Backend Services starter
 
-An optional system-to-system app with no EHR launch, clinician, callback or patient context. To
-launch your app in nav-epj, use `private-key-jwt/` instead.
+System-to-system app with `client_credentials`. It has no EHR launch, clinician or patient context.
 
-1. Use Node 22 and run `npm ci`.
-2. Configure it as described in [GUIDE.md](./GUIDE.md). Set `SCOPES` to `system/Patient.rs`,
-   `PRIVATE_JWK_PATH` to your private JWK and `PATIENT_IDENTIFIER` to a roster `system|value`.
-3. Adapt `src/steps.ts`, run `npm start` and open `http://localhost:3100`.
+## 1. Install
 
-The host registers `tokenEndpointAuthMethod: private_key_jwt`, `grantTypes: [client_credentials]`,
-`scopes: [system/Patient.rs]` and the public JWK Set inline as `jwkSet`, with no launch or redirect
-URIs. Do not reuse the EHR client's registration. Each search gets a fresh token with no patient
-context and no refresh token. Patient search needs an identifier, so `GET /Patient` does not list the
-cohort. Ideas are in [EXERCISES.md](./EXERCISES.md).
+```sh
+npm ci
+```
+
+Node 22 (`.nvmrc`).
+
+## 2. Configure
+
+Put the `.env` from your team packet in this folder, or `cp .env.example .env` and fill in ([.env.example](./.env.example)).
+
+```sh
+PORT=3100
+FHIR_BASE_URL=https://epj.ekstern.dev.nav.no/fhir
+AUTH_ISSUER=https://epj.ekstern.dev.nav.no/oidc
+CLIENT_ID=your-client-id
+SCOPES=system/Patient.rs
+PRIVATE_JWK_PATH=keys/backend-key.private.jwk.json
+PATIENT_IDENTIFIER=urn:oid:2.16.578.1.12.4.1.4.1|20856210112
+```
+
+## 3. Run the reference
+
+```sh
+npm run start:reference
+```
+
+## 4. Open the app
+
+Open http://localhost:3100 and follow the search link.
+
+## 5. Build your own
+
+Implement the TODOs in [src/steps.ts](./src/steps.ts), then run `npm start`.
+
+```ts
+async backendSearch(config, tokens) {
+  return unfinished(3, "Search Patient by the supplied synthetic identifier using the server-side bearer token");
+},
+```
+
+The matching function is `backendSearch` in [src/reference.ts](./src/reference.ts).
+
+Sign a client assertion for the token request (`clientAssertion` in [src/reference.ts](./src/reference.ts)):
+
+```json
+{
+  "header": { "alg": "RS384", "typ": "JWT", "kid": "<kid from your JWK>" },
+  "claims": { "iss": "<client id>", "sub": "<client id>", "aud": "<token endpoint>", "jti": "<random uuid>", "exp": "<now + 2 min>" }
+}
+```
+
+Keep the private JWK in `keys/` (ignored by Git).
+
+## 6. Registration
+
+The host registers this for you. Compare it with your packet.
+
+```json
+{
+  "tokenEndpointAuthMethod": "private_key_jwt",
+  "jwkSet": { "keys": ["<your public JWK>"] },
+  "grantTypes": ["client_credentials"],
+  "scopes": ["system/Patient.rs"]
+}
+```
+
+[Exercises](../EXERCISES.md) · [Troubleshooting](../TROUBLESHOOTING.md)
