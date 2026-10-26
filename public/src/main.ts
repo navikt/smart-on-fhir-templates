@@ -8,7 +8,7 @@ function loadConfig() {
     const problems = configProblems(error);
     if (!problems) throw error;
     console.error(["Configuration problem in .env:", ...problems.map(p => `- ${p}`),
-      'See "Before you start" in README.md'].join("\n"));
+      'See "2. Configure" in README.md'].join("\n"));
     process.exit(1);
   }
 }

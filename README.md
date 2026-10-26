@@ -4,12 +4,8 @@ Starter apps for building a SMART on FHIR app and launching it in nav-epj.
 
 ## Before you start
 
-The host registers every app by hand in nav-epj, so you need a few things first:
-
-1. Get your own test clinician login from the host. One login per person, never share it.
-2. Pick a `CLIENT_ID` of your own, e.g. `yourname-public`.
-3. `client-secret`: pick a simple `CLIENT_SECRET`. `private-key-jwt` and `backend-services`: run `npm run generate-key` in the folder you pick below.
-4. Tell the host your client ID, the variant, and the secret or the public JWK Set. When the host says it is registered, it works.
+1. Get your own test clinician login from the host. Use one login per person.
+2. The host registers every app by hand in nav-epj. Your folder's README tells you what to send the host (client ID, plus a secret or public key) and when.
 
 ## Get started
 
