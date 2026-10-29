@@ -23,7 +23,7 @@ Then walk a teammate through the redirects in the browser's network tab. Keep to
 
 ## Scopes
 
-`r` reads by ID, `s` searches, `c` creates. Add scopes to `SCOPES` and ask the host to register them.
+`r` reads by ID, `s` searches, `c` creates. Add scopes to `SCOPES`; `patient/` and `user/` scopes need no registration (see [README](./README.md#6-registration)).
 
 | Feature | FHIR request | Extra scopes |
 |---|---|---|

@@ -4,7 +4,7 @@
 |---|---|
 | `TODO n` / HTTP 501 (`public/` only) | Implement that step in `src/steps.ts`, or compare with `src/reference.ts` or the finished `client-secret/src/smart.ts` |
 | `Configuration problem in .env` | Fix the listed variables, see the Configure step in your folder's README |
-| `invalid_client` or unknown client | The host may not have registered it yet. Ask the host to confirm the registration |
+| `invalid_client` or unknown client | `public/`: `CLIENT_ID` must be `hackathon-public`. Other folders: the host may not have registered your client yet, ask the host to confirm |
 | `Launch token was issued for another organisation.` | You switched organisation in another tab, or someone else uses your login. Log in with your own clinician and relaunch |
 | `Launch iss ... does not match FHIR_BASE_URL` | Set `FHIR_BASE_URL` to the `iss` shown, exactly |
 | Unknown client or rejected redirect | Match client ID, auth method and URIs to your registration |
