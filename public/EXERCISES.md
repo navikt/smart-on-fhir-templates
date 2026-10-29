@@ -1,8 +1,8 @@
 # Ideas for your SMART app
 
 Bronze, Silver and Gold ideas from the [published track](https://hl7norway.github.io/Norwegian-FHIR-Hackathon-2026/currentbuild/smart-track.html).
-Borrow helpers from [public/src/extensions.ts](./public/src/extensions.ts) or write your own FHIR calls.
-Bronze and Silver need an EHR launch (`public/`, `client-secret/`, `private-key-jwt/`).
+Borrow helpers from [src/extensions.ts](./src/extensions.ts) or write your own FHIR calls.
+Bronze and Silver build on this `public/` app. Gold ideas point at the finished templates in the other folders.
 
 ## Bronze: it launched
 
@@ -33,7 +33,6 @@ Then walk a teammate through the redirects in the browser's network tab. Keep to
 | Measurements | `GET Observation?subject={patient}&code=http://loinc.org\|8310-5` | `patient/Observation.s` |
 | Write a measurement | `POST Observation` | `patient/Observation.c` (add `.r` to read back) |
 | Write a note | `POST DocumentReference` | `patient/DocumentReference.c` (add `.r` to read back) |
-| Backend search | `GET Patient?identifier={system\|value}` | `system/Patient.rs` |
 
 Select the encounter that matches the launch context. An empty Bundle means no data, a 403 means a missing scope.
 
@@ -67,7 +66,7 @@ POST <token endpoint>
 Authorization: Basic base64(client_id:client_secret)
 ```
 
-Move a working `public/` app to `client-secret/` by changing only the token request (TODO 7). A wrong secret returns `401 invalid_client`.
+Compare your token request (TODO 7) with `exchange` in [../client-secret/src/smart.ts](../client-secret/src/smart.ts). Only the client authentication differs. A wrong secret returns `401 invalid_client`.
 
 ## Gold
 
@@ -86,7 +85,7 @@ Call `createResource` from a POST handler triggered by a user action. Validate i
 const assertion = await clientAssertion(config, discovery.token_endpoint);
 ```
 
-Use `private-key-jwt/` and sign the assertion as in [private-key-jwt/README.md](./private-key-jwt/README.md). The reference is `clientAssertion` in `private-key-jwt/src/reference.ts`.
+Read `clientAssertion` in [../private-key-jwt/src/smart.ts](../private-key-jwt/src/smart.ts) and compare it with the token request of `public/`. Run that template with your own key to see the signed assertion work.
 
 ### Backend Services
 
@@ -95,7 +94,7 @@ GET /Patient?identifier=urn:oid:2.16.578.1.12.4.1.4.1|20856210112
 Authorization: Bearer <system token>
 ```
 
-Use `backend-services/` for a separate app with its own registration. The token has no patient, no refresh token and lives at most five minutes.
+Run the finished [../backend-services/](../backend-services/) template, which has its own registration with the host. The token has no patient and no refresh token.
 
 ### Break it
 
@@ -107,7 +106,7 @@ Provoke one rejection at a time and compare the status and error with what you e
 | Your app | ID token whose audience is not your client ID | `verifyIdentity` throws |
 | Authorization server | Send the same code to the token endpoint twice | `invalid_grant` |
 | Authorization server | Wrong `code_verifier` | `invalid_grant` |
-| Authorization server | Wrong, expired or replayed assertion (`private-key-jwt/`) | `401 invalid_client` |
+| Authorization server | Wrong, expired or replayed assertion (in `../private-key-jwt/`) | `401 invalid_client` |
 | FHIR server | Resource outside your granted scopes | `403` with an `OperationOutcome` |
 | FHIR server | Access token whose audience is not the FHIR base | Rejected |
 
@@ -115,4 +114,4 @@ Audiences differ per token: authorize `aud` is the FHIR base, the ID token `aud`
 
 ## Keep a working launch
 
-Commit a working launch before trying a new idea. To switch client authentication, copy `src/steps.ts` into a fresh copy of the target starter and change TODO 7 only.
+Commit a working launch before trying a new idea. To see another client authentication method, compare with `src/smart.ts` in the finished `client-secret/` and `private-key-jwt/` templates.

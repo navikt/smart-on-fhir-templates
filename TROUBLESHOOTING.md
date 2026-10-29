@@ -2,8 +2,8 @@
 
 | Symptom | Fix |
 |---|---|
-| `TODO n` / HTTP 501 | Implement that step in `src/steps.ts`, or compare with `src/reference.ts` |
-| `Configuration problem in .env` | Fix the listed variables, see "2. Configure" in your folder's README |
+| `TODO n` / HTTP 501 (`public/` only) | Implement that step in `src/steps.ts`, or compare with `src/reference.ts` or the finished `client-secret/src/smart.ts` |
+| `Configuration problem in .env` | Fix the listed variables, see the Configure step in your folder's README |
 | `invalid_client` or unknown client | The host may not have registered it yet. Ask the host to confirm the registration |
 | `Launch token was issued for another organisation.` | You switched organisation in another tab, or someone else uses your login. Log in with your own clinician and relaunch |
 | `Launch iss ... does not match FHIR_BASE_URL` | Set `FHIR_BASE_URL` to the `iss` shown, exactly |
@@ -11,9 +11,9 @@
 | Missing state or pending launch | Start a fresh launch from the app picker in the same browser |
 | Missing ID token or patient | Include `openid fhirUser launch` in `SCOPES` |
 | App picker disabled | Start a consultation for the patient |
-| Token endpoint 401 | Check the secret, the `kid`, the key format and the assertion `aud` |
+| Token endpoint 401 (`client-secret/`, `private-key-jwt/`, `backend-services/`) | Check the secret, the `kid`, the key format and the assertion `aud` |
 | FHIR 403 | Compare `SCOPES` with the granted `scope` in the token response (backend: `system/Patient.rs`) |
-| Session expired | Launch again, sessions live in memory |
+| Session expired | Launch again from the EPJ, sessions live in server memory |
 | Second app on another port | Set a new `PORT` and a `REDIRECT_URI` registered for it |
 
 Real vs mocked: your running app talks to the real nav-epj, `npm test` uses a local mock.

@@ -62,4 +62,4 @@ The host registers these values for your `CLIENT_ID`. Ask the host to add scopes
 | Redirect URL | `http://localhost:3100/callback` |
 | Scopes | `openid fhirUser launch patient/Patient.r patient/Encounter.s` |
 
-[Exercises](../EXERCISES.md) · [Troubleshooting](../TROUBLESHOOTING.md)
+[Exercises](./EXERCISES.md) · [Troubleshooting](../TROUBLESHOOTING.md)
