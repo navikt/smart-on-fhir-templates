@@ -78,3 +78,15 @@ test("reuses the token until it is near expiry", async t => {
   await expiring.app.inject({ url: "/" });
   assert.equal(expiring.tokens.length, 2);
 });
+
+test("caps a long token lifetime at five minutes", async t => {
+  const { app, tokens } = await setup(t, 86400);
+  t.mock.timers.enable({ apis: ["Date"], now: Date.now() });
+  await app.inject({ url: "/" });
+  t.mock.timers.tick(269_000);
+  await app.inject({ url: "/" });
+  assert.equal(tokens.length, 1);
+  t.mock.timers.tick(2_000);
+  await app.inject({ url: "/" });
+  assert.equal(tokens.length, 2);
+});

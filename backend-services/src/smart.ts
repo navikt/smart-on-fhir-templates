@@ -6,6 +6,7 @@ import { AppError, trustedUrl, type Config } from "./config.ts";
 import { json } from "./http.ts";
 
 const REFRESH_MARGIN_MS = 30_000;
+const MAX_CACHE_SECONDS = 300;
 
 const discoverySchema = z.object({
   issuer: z.url(), token_endpoint: z.url(),
@@ -67,7 +68,8 @@ export function tokenProvider(config: Config): () => Promise<string> {
   return async () => {
     if (cached && Date.now() < cached.expiresAt - REFRESH_MARGIN_MS) return cached.accessToken;
     const tokens = await requestToken(config);
-    cached = { accessToken: tokens.access_token, expiresAt: Date.now() + tokens.expires_in * 1000 };
+    const lifetime = Math.min(tokens.expires_in, MAX_CACHE_SECONDS);
+    cached = { accessToken: tokens.access_token, expiresAt: Date.now() + lifetime * 1000 };
     return cached.accessToken;
   };
 }
