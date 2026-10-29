@@ -1,13 +1,11 @@
 {
-  "name": "smart-hackathon-starter",
+  "name": "smart-client-secret",
   "private": true,
   "version": "0.1.0",
   "type": "module",
   "engines": { "node": "22.x" },
   "scripts": {
     "start": "node --env-file-if-exists=.env --import tsx src/main.ts",
-    "start:reference": "node --env-file-if-exists=.env --import tsx src/main.ts --reference",
-    "generate-key": "node --env-file-if-exists=.env --import tsx src/generate-key.ts",
     "test": "node --import tsx --test --test-reporter=spec test/*.test.ts",
     "typecheck": "tsc --noEmit"
   },

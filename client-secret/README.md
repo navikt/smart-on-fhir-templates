@@ -1,73 +1,57 @@
-# Client-secret EHR-launch starter
+# SMART on FHIR EHR launch with a client secret
 
-Token endpoint authentication `client_secret_basic`. The secret stays on the Node server.
+A finished SMART on FHIR app for nav-epj. The app authenticates to the token endpoint with `client_secret_basic`, and the secret stays on the Node server. After launch it shows the patient's name and the logged-in clinician.
 
-## 1. Install
+## Quickstart
 
 ```sh
 npm ci
-```
-
-Node 22 (`.nvmrc`).
-
-## 2. Configure
-
-```sh
 cp .env.example .env
+npm start
 ```
 
-Edit `.env` and set `CLIENT_ID` to a name of your own, e.g. `yourname-secret` ([.env.example](./.env.example)). Set `CLIENT_SECRET` to a simple secret you pick.
+Node 22 (`.nvmrc`). Then log in at https://epj.ekstern.dev.nav.no, open a patient marked "Pågår nå" and pick your app.
 
-```sh
-PORT=3100
-FHIR_BASE_URL=https://epj.ekstern.dev.nav.no/fhir
-AUTH_ISSUER=https://epj.ekstern.dev.nav.no/oidc
-CLIENT_ID=yourname-secret
-REDIRECT_URI=http://localhost:3100/callback
-SCOPES=openid fhirUser launch patient/Patient.r patient/Encounter.s
-CLIENT_SECRET=pick-a-simple-secret
-```
+## Configure
 
-Tell the host your `CLIENT_ID` and `CLIENT_SECRET`. Wait for the go-ahead before launching.
+Edit `.env`. [src/config.ts](./src/config.ts) validates it at startup and prints what is missing.
 
-## 3. Run the reference
+| Variable | Value |
+|---|---|
+| `PORT` | `3100` |
+| `FHIR_BASE_URL` | `https://epj.ekstern.dev.nav.no/fhir` |
+| `AUTH_ISSUER` | `https://epj.ekstern.dev.nav.no/oidc` |
+| `CLIENT_ID` | Your own client ID, e.g. `yourname-secret` |
+| `REDIRECT_URI` | `http://localhost:3100/callback` |
+| `SCOPES` | `openid fhirUser launch patient/Patient.r patient/Encounter.s` |
+| `CLIENT_SECRET` | A secret you pick |
 
-```sh
-npm run start:reference
-```
+## Register
 
-## 4. Launch
-
-Log in at https://epj.ekstern.dev.nav.no with your own test clinician, open a patient marked "Pågår nå" and pick your app.
-
-## 5. Build your own
-
-Implement the TODOs in [src/steps.ts](./src/steps.ts), then run `npm start`.
-
-```ts
-pkce() {
-  return unfinished(3, "Generate a random PKCE verifier and its base64url SHA-256 challenge");
-},
-```
-
-The matching function is `pkce` in [src/reference.ts](./src/reference.ts).
-
-Send the secret as HTTP Basic auth in the token request (`tokenRequest` in [src/reference.ts](./src/reference.ts)):
-
-```http
-POST <token endpoint>
-Authorization: Basic base64(client_id:client_secret)
-```
-
-## 6. Registration
-
-The host registers these values for your `CLIENT_ID`. Ask the host to add scopes or a second port.
+The host registers the app in nav-epj by hand. Send your `CLIENT_ID` and `CLIENT_SECRET`, and wait for the go-ahead before launching. Changing scopes, port or redirect URI means registering again.
 
 | Field | Value |
 |---|---|
 | Token endpoint auth | `client_secret_basic` |
 | Launch URL | `http://localhost:3100/launch` |
 | Redirect URL | `http://localhost:3100/callback` |
-| Scopes | `openid fhirUser launch patient/Patient.r patient/Encounter.s` |
+| Scopes | same as `SCOPES` |
 
-[Exercises](../EXERCISES.md) · [Troubleshooting](../TROUBLESHOOTING.md)
+## Where to add your app
+
+- [src/smart.ts](./src/smart.ts): launch, PKCE and state, code exchange with Basic credentials, ID token verification. Reuse as is.
+- [src/app.ts](./src/app.ts): the `/` route fetches the launched patient and renders the name. Replace it with your own page.
+- [src/fhir.ts](./src/fhir.ts): `fhirGet` sends the access token to the configured FHIR server. Add schemas and calls here.
+
+The session is held in server memory and lasts at most as long as the access token. There is no refresh: after expiry, launch again from the EPJ. Request more scopes in `SCOPES` and in the registration before reading more resources.
+
+## Test
+
+```sh
+npm test
+npm run typecheck
+```
+
+`test/smoke.test.ts` runs launch, callback and the patient page against an in-process mock server. It does not read `.env`.
+
+[Troubleshooting](../TROUBLESHOOTING.md)
