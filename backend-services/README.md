@@ -1,84 +1,58 @@
-# Backend Services starter
+# SMART Backend Services
 
-System-to-system app with `client_credentials`. It has no EHR launch, clinician or patient context.
+A finished system-to-system app for nav-epj. It authenticates with `client_credentials` and a signed `private_key_jwt` assertion, then searches Patient by identifier with a system-scoped token. There is no EHR launch, clinician or patient context.
 
-## 1. Install
+## Quickstart
 
 ```sh
 npm ci
-```
-
-Node 22 (`.nvmrc`).
-
-## 2. Configure
-
-```sh
 cp .env.example .env
-```
-
-Edit `.env` and set `CLIENT_ID` to a name of your own, e.g. `yourname-backend` ([.env.example](./.env.example)).
-
-```sh
-PORT=3100
-FHIR_BASE_URL=https://epj.ekstern.dev.nav.no/fhir
-AUTH_ISSUER=https://epj.ekstern.dev.nav.no/oidc
-CLIENT_ID=yourname-backend
-SCOPES=system/Patient.rs
-PRIVATE_JWK_PATH=keys/private.jwk.json
-PATIENT_IDENTIFIER=urn:oid:2.16.578.1.12.4.1.4.1|20856210112
-```
-
-Generate your key pair:
-
-```sh
 npm run generate-key
+npm start
 ```
 
-The private key stays in `keys/` on your machine and is never shared. The public key is calculated from the private key, and that is what you give the host.
+Node 22 (`.nvmrc`). Then open http://localhost:3100.
 
-Tell the host your `CLIENT_ID` and the public JWK Set it prints. Wait for the go-ahead before launching.
+`npm run generate-key` writes the private key to `keys/private.jwk.json` (ignored by Git) and prints the public JWK Set. Give that to the host. It refuses to overwrite an existing key.
 
-## 3. Run the reference
+## Configure
 
-```sh
-npm run start:reference
-```
+Edit `.env`. [src/config.ts](./src/config.ts) validates it at startup and prints what is missing.
 
-## 4. Open the app
+| Variable | Value |
+|---|---|
+| `PORT` | `3100` |
+| `FHIR_BASE_URL` | `https://epj.ekstern.dev.nav.no/fhir` |
+| `AUTH_ISSUER` | `https://epj.ekstern.dev.nav.no/oidc` |
+| `CLIENT_ID` | Your own client ID, e.g. `yourname-backend` |
+| `SCOPES` | `system/Patient.rs` (system scopes only) |
+| `PRIVATE_JWK_PATH` | `keys/private.jwk.json` |
+| `PATIENT_IDENTIFIER` | `urn:oid:2.16.578.1.12.4.1.4.1\|20856210112` |
 
-Open http://localhost:3100 and follow the search link.
+## Register
 
-## 5. Build your own
-
-Implement the TODOs in [src/steps.ts](./src/steps.ts), then run `npm start`.
-
-```ts
-async backendSearch(config, tokens) {
-  return unfinished(3, "Search Patient by the supplied synthetic identifier using the server-side bearer token");
-},
-```
-
-The matching function is `backendSearch` in [src/reference.ts](./src/reference.ts).
-
-Sign a client assertion for the token request (`clientAssertion` in [src/reference.ts](./src/reference.ts)):
-
-```json
-{
-  "header": { "alg": "RS384", "typ": "JWT", "kid": "<kid from your JWK>" },
-  "claims": { "iss": "<client id>", "sub": "<client id>", "aud": "<token endpoint>", "jti": "<random uuid>", "exp": "<now + 2 min>" }
-}
-```
-
-Keep the private JWK in `keys/` (ignored by Git).
-
-## 6. Registration
-
-The host registers these values for your `CLIENT_ID`. It has no launch or redirect URL.
+The host registers the app in nav-epj by hand. Send your `CLIENT_ID` and the public JWK Set, and wait for the go-ahead before running. There is no launch or redirect URL. Changing scopes means registering again.
 
 | Field | Value |
 |---|---|
 | Token endpoint auth | `private_key_jwt` with your public JWK |
 | Grant type | `client_credentials` |
-| Scopes | `system/Patient.rs` |
+| Scopes | same as `SCOPES` |
 
-[Exercises](../EXERCISES.md) · [Troubleshooting](../TROUBLESHOOTING.md)
+## Where to add your app
+
+- [src/smart.ts](./src/smart.ts): discovery, signed client assertion and the token request. `tokenProvider` caches the token until 30 seconds before it expires. Reuse as is.
+- [src/fhir.ts](./src/fhir.ts): `searchPatients` does the one `Patient?identifier=` search. Add searches and schemas here, and the matching `system/` scopes.
+- [src/app.ts](./src/app.ts): the `/` route renders the result. Replace it with your own routes.
+- [src/generate-key.ts](./src/generate-key.ts): creates the RS384 key pair with `jose`.
+
+## Test
+
+```sh
+npm test
+npm run typecheck
+```
+
+`test/smoke.test.ts` generates a throwaway key in a temp directory and runs token request and search against an in-process mock server, checking the signed assertion and token reuse. It does not read `.env`.
+
+[Troubleshooting](../TROUBLESHOOTING.md)
