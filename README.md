@@ -1,10 +1,8 @@
 # SMART on FHIR templates for nav-epj
 
-Small TypeScript examples of SMART on FHIR apps that launch in nav-epj. Three are finished and minimal, one is the hackathon exercise. Each folder is a standalone npm project: copy it out and make it your own.
-
 | Folder | Flow | Client authentication | Use it to |
 |---|---|---|---|
-| [public/](./public/) | EHR launch | `none` (PKCE only) | Do the hackathon: implement the auth steps yourself, then follow the [exercises](./public/EXERCISES.md) |
+| [public/](./public/) | EHR launch | `none` (PKCE only) | Implement the auth steps yourself, then follow the [exercises](./public/EXERCISES.md) |
 | [client-secret/](./client-secret/) | EHR launch | `client_secret_basic` | Start an app that holds a secret on its server |
 | [private-key-jwt/](./private-key-jwt/) | EHR launch | `private_key_jwt` | Start an app that signs its token request with a key pair |
 | [backend-services/](./backend-services/) | `client_credentials` | `private_key_jwt` | Start a system-to-system app without a clinician or patient |
