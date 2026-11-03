@@ -1,5 +1,5 @@
 import { createLocalJWKSet, importJWK, jwtVerify, SignJWT } from 'jose'
-import { createHash, randomUUID, timingSafeEqual } from 'node:crypto'
+import { createHash, randomUUID } from 'node:crypto'
 import { readFile } from 'node:fs/promises'
 import { z } from 'zod'
 
@@ -11,6 +11,7 @@ import {
     EncounterSchema,
     fhir,
     IdSchema,
+    isSameSecret,
     json,
     OrganizationSchema,
     PatientSchema,
@@ -335,13 +336,6 @@ export async function backendSearch(config: Config, tokens: Tokens): Promise<Pat
         searchPath('Patient', { identifier: config.patientIdentifier }),
         bundle(PatientSchema),
     )
-}
-
-function isSameSecret(received: string, expected: string): boolean {
-    const receivedBytes = Buffer.from(received)
-    const expectedBytes = Buffer.from(expected)
-
-    return receivedBytes.length === expectedBytes.length && timingSafeEqual(receivedBytes, expectedBytes)
 }
 
 function formUrlEncode(value: string): string {

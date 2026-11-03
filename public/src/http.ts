@@ -1,4 +1,4 @@
-import { randomBytes } from 'node:crypto'
+import { randomBytes, timingSafeEqual } from 'node:crypto'
 import { z } from 'zod'
 
 import { AppError, type Config } from './config.ts'
@@ -216,4 +216,11 @@ export function page(title: string, content: string): string {
 
 export function randomToken(): string {
     return randomBytes(RANDOM_TOKEN_BYTES).toString('base64url')
+}
+
+export function isSameSecret(received: string, expected: string): boolean {
+    const receivedBytes = Buffer.from(received)
+    const expectedBytes = Buffer.from(expected)
+
+    return receivedBytes.length === expectedBytes.length && timingSafeEqual(receivedBytes, expectedBytes)
 }

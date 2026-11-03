@@ -88,6 +88,9 @@ const DocumentInputSchema = z
     })
     .strict()
 
+// Sent in every fixture OperationOutcome, like a real server's diagnostics: the app must never show it.
+export const UPSTREAM_DETAIL = 'upstream-detail-must-not-leak'
+
 export const launchContext: Context = { patient: 'p1', encounter: 'e1', practitioner: 'h1' }
 
 export function bearer(tokens: Tokens): { Authorization: string } {
@@ -120,6 +123,7 @@ interface FixtureObservation {
 interface CreateResponse {
     status: number
     location: 'correct' | 'missing' | 'wrong'
+    readback: 'correct' | 'missing' | 'wrong-id' | 'other-patient'
 }
 
 export interface Fixture {
@@ -134,6 +138,7 @@ export interface Fixture {
     requests: RecordedRequest[]
     created: Map<string, Record<string, unknown>>
     createResponse: CreateResponse
+    registeredScopes: string[]
     registerCode: (code: string, challenge: string, scope?: string) => void
     tokenCalls: () => number
     lastBody: () => URLSearchParams
@@ -162,7 +167,7 @@ export async function fixture(clientAlg: 'ES384' | 'RS384' = 'ES384', modulusLen
     const issued = new Map<string, IssuedToken>()
     const requests: RecordedRequest[] = []
     const created = new Map<string, Record<string, unknown>>()
-    const createResponse: CreateResponse = { status: 201, location: 'correct' }
+    const createResponse: CreateResponse = { status: 201, location: 'correct', readback: 'correct' }
     const usedAssertions = new Set<string>()
     const codes = new Map<string, { challenge: string; scope: string }>()
 
@@ -488,7 +493,19 @@ export async function fixture(clientAlg: 'ES384' | 'RS384' = 'ES384', modulusLen
             server.get<{ Params: { id: string } }>(`/fhir/${type}/:id`, async (request, reply) => {
                 const resource = created.get(`${type}/${request.params.id}`)
 
-                return resource ?? outcome(reply, 404, 'not-found')
+                if (!resource || createResponse.readback === 'missing') {
+                    return outcome(reply, 404, 'not-found')
+                }
+
+                if (createResponse.readback === 'wrong-id') {
+                    return { ...resource, id: 'someone-elses-resource' }
+                }
+
+                if (createResponse.readback === 'other-patient') {
+                    return { ...resource, subject: { reference: 'Patient/p2' } }
+                }
+
+                return resource
             })
         }
     }
@@ -534,6 +551,7 @@ export async function fixture(clientAlg: 'ES384' | 'RS384' = 'ES384', modulusLen
         requests,
         created,
         createResponse,
+        registeredScopes,
         registerCode: (code, challenge, scope = config.scopes) => {
             const grantedScopes = splitScopes(scope).filter((candidate) => registeredScopes.includes(candidate))
 
@@ -651,7 +669,9 @@ function searchset(resources: unknown[]): object {
 }
 
 function outcome(reply: FastifyReply, status: number, code: string): FastifyReply {
-    return reply.code(status).send({ resourceType: 'OperationOutcome', issue: [{ severity: 'error', code }] })
+    return reply
+        .code(status)
+        .send({ resourceType: 'OperationOutcome', issue: [{ severity: 'error', code, diagnostics: UPSTREAM_DETAIL }] })
 }
 
 function requiredInteraction(method: string, pathParts: string[]): 'c' | 's' | 'r' {
