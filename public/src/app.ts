@@ -1,9 +1,12 @@
 import cookie from '@fastify/cookie'
-import Fastify, { LogController, type FastifyInstance } from 'fastify'
+import Fastify, { LogController, type FastifyInstance, type FastifyRequest } from 'fastify'
 
+import { registerClinicalApp } from './clinical-app.ts'
 import { AppError, type Config } from './config.ts'
 import { escapeHtml, page, randomToken } from './http.ts'
 import * as reference from './reference.ts'
+import { appPage } from './routes.ts'
+import { registerScopeDetective } from './scope-detective.ts'
 import { configureServer } from './server.ts'
 import { steps, type Steps } from './steps.ts'
 import { TRANSACTION_TTL_MS, type Chart, type Session, type Transaction } from './types.ts'
@@ -33,6 +36,16 @@ export async function buildApp(
         httpOnly: true,
         sameSite: 'lax' as const,
         secure: new URL(config.redirectUri).protocol === 'https:',
+    }
+
+    function requireSession(request: FastifyRequest): Session {
+        const session = sessions.get(request.cookies[SESSION_COOKIE] ?? '')
+
+        if (!session) {
+            throw new AppError(401, 'Session missing or expired. Launch again from the EPJ.')
+        }
+
+        return session
     }
 
     app.addHook('onRequest', async () => {
@@ -116,16 +129,16 @@ export async function buildApp(
     })
 
     app.get('/app', async (request, reply) => {
-        const session = sessions.get(request.cookies[SESSION_COOKIE] ?? '')
-
-        if (!session) {
-            throw new AppError(401, 'Session missing or expired. Launch again from the EPJ.')
-        }
-
+        const session = requireSession(request)
         const chart = await api.loadChart(config, session.tokens, session.context)
 
-        return reply.type('text/html').send(page('Active consultation', chartContent(chart, config, session)))
+        return reply.type('text/html').send(appPage('Active consultation', chartContent(chart, config, session)))
     })
+
+    const routeDeps = { config, requireSession }
+
+    registerClinicalApp(app, routeDeps)
+    registerScopeDetective(app, routeDeps)
 
     return app
 }

@@ -4,10 +4,10 @@ import { AppError, type Config } from './config.ts'
 import { bundle, fhir, fhirUrl, IdSchema, referenceId, request, searchPath } from './http.ts'
 import type { Context, Tokens } from './types.ts'
 
-const LOINC_SYSTEM = 'http://loinc.org'
+export const LOINC_SYSTEM = 'http://loinc.org'
 const UCUM_SYSTEM = 'http://unitsofmeasure.org'
 
-const BODY_TEMPERATURE_LOINC = '8310-5'
+export const BODY_TEMPERATURE_LOINC = '8310-5'
 const MIN_TREND_READINGS = 3
 
 const ConditionSchema = z.object({ resourceType: z.literal('Condition') }).passthrough()

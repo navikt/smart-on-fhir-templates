@@ -3,7 +3,7 @@ import { z } from 'zod'
 
 import { AppError, type Config } from './config.ts'
 
-const REQUEST_TIMEOUT_MS = 10_000
+export const REQUEST_TIMEOUT_MS = 10_000
 
 const RANDOM_TOKEN_BYTES = 32
 
