@@ -25,7 +25,7 @@ export default defineConfig({
         },
         {
             files: ['test/**/*.ts'],
-            rules: { 'typescript/no-floating-promises': 'off' },
+            rules: { 'typescript/no-floating-promises': 'off', 'typescript/no-non-null-assertion': 'off' },
         },
     ],
 })
