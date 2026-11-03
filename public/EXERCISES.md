@@ -46,7 +46,7 @@ GET Observation?subject={patient}&code=http://loinc.org|8310-5
 ```
 
 ```ts
-const { conditions, measurements, trendReady } = await clinicalSummary(config, tokens, context);
+const { conditions, measurements, trendReady } = await clinicalSummary(config, tokens, context)
 ```
 
 Show a summary, trend or flag with the code system and unit next to each value. Draw a trend from three or more readings in one unit.
@@ -73,8 +73,8 @@ Compare your token request (TODO 7) with `exchange` in [../client-secret/src/sma
 ### Write-back
 
 ```ts
-const created = await createResource(config, tokens, temperature(context, 37.4));
-const note = await createResource(config, tokens, journalNote(context, "Patient reports improvement."));
+const created = await createResource(config, tokens, temperature(context, 37.4))
+const note = await createResource(config, tokens, journalNote(context, 'Patient reports improvement.'))
 ```
 
 Call `createResource` from a POST handler triggered by a user action. Validate input, bind a CSRF token to the session, check the Origin header and take patient and encounter from the launch session. Expect `201` with an ID and `Location`, then read it back. Measurements appear in the Målinger tab and the note in the journal editor.
@@ -82,7 +82,7 @@ Call `createResource` from a POST handler triggered by a user action. Validate i
 ### Asymmetric authentication
 
 ```ts
-const assertion = await clientAssertion(config, discovery.token_endpoint);
+const assertion = await clientAssertion(config, discovery.token_endpoint)
 ```
 
 Read `clientAssertion` in [../private-key-jwt/src/smart.ts](../private-key-jwt/src/smart.ts) and compare it with the token request of `public/`. Run that template with your own key to see the signed assertion work.
