@@ -1,3 +1,3 @@
-import type { Variant } from "./config.ts";
+import type { Variant } from './config.ts'
 
-export const variant: Variant = "public";
+export const variant: Variant = 'public'
