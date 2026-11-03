@@ -45,7 +45,7 @@ Implement the TODOs in [src/steps.ts](./src/steps.ts), then run `npm start`.
 
 ```ts
 pkce() {
-  return unfinished(3, "Generate a random PKCE verifier and its base64url SHA-256 challenge");
+    return unfinished(3, 'Generate a random PKCE verifier and its base64url SHA-256 challenge')
 },
 ```
 
