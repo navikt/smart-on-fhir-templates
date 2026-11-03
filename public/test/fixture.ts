@@ -124,6 +124,8 @@ interface CreateResponse {
     status: number
     location: 'correct' | 'missing' | 'wrong'
     readback: 'correct' | 'missing' | 'wrong-id' | 'other-patient'
+    // What the server does after it has stored the resource.
+    delivery: 'normal' | 'disconnect' | 'empty' | 'malformed'
 }
 
 export interface Fixture {
@@ -167,7 +169,7 @@ export async function fixture(clientAlg: 'ES384' | 'RS384' = 'ES384', modulusLen
     const issued = new Map<string, IssuedToken>()
     const requests: RecordedRequest[] = []
     const created = new Map<string, Record<string, unknown>>()
-    const createResponse: CreateResponse = { status: 201, location: 'correct', readback: 'correct' }
+    const createResponse: CreateResponse = { status: 201, location: 'correct', readback: 'correct', delivery: 'normal' }
     const usedAssertions = new Set<string>()
     const codes = new Map<string, { challenge: string; scope: string }>()
 
@@ -482,9 +484,26 @@ export async function fixture(clientAlg: 'ES384' | 'RS384' = 'ES384', modulusLen
                 const resource = { ...body, id: `created-${created.size + 1}` }
                 created.set(`${type}/${resource.id}`, resource)
 
+                if (createResponse.delivery === 'disconnect') {
+                    // Stored, then the connection drops before any response. A hijacked reply skips onResponse.
+                    requests.push({ path: `/fhir/${type}`, query: {}, method: 'POST', status: 0 })
+                    reply.hijack()
+                    request.raw.socket.destroy()
+
+                    return reply
+                }
+
                 if (createResponse.location !== 'missing') {
                     const locationId = createResponse.location === 'correct' ? resource.id : 'wrong-id'
                     reply.header('Location', `${config.fhirBase}/${type}/${locationId}`)
+                }
+
+                if (createResponse.delivery === 'empty') {
+                    return reply.code(createResponse.status).send('')
+                }
+
+                if (createResponse.delivery === 'malformed') {
+                    return reply.code(createResponse.status).type('application/fhir+json').send('{not json')
                 }
 
                 return reply.code(createResponse.status).send(resource)

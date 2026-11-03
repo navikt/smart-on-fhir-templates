@@ -104,7 +104,7 @@ Checks on every POST, in this order:
 4. The fields validate: a temperature between 25 and 45 °C with at most two decimals, a note of 1 to 2000 characters, no repeated or unknown fields (400 otherwise). A `patient` or `encounter` field is rejected, so context only comes from the session.
 5. The token has the create and read scopes for the resource (403 otherwise).
 
-Then `createResource` requires `201`, a server ID and a matching `Location`. The app reads the resource back with the user's token and checks the type, the ID, the patient and the encounter against the launch session. Only then does it show the ID and the read-back. If the read-back fails after a successful create, the page says the resource exists and tells the user not to submit again. The app never retries a write.
+Then `createResource` requires `201`, a server ID and a matching `Location`. The app reads the resource back with the user's token and checks the type, the ID, the patient and the encounter against the launch session. Only then does it show the ID and the read-back. If the read-back fails after a successful create, the page says the resource exists and tells the user not to submit again. If the create itself ends in an unknown outcome (disconnect, timeout, 5xx, an empty or unreadable 201), the page says the resource may already have been saved and to check the EPJ before submitting again. A 4xx from the server is reported as a rejection. The app never retries a write.
 
 Two caveats:
 

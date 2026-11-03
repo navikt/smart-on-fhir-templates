@@ -282,6 +282,53 @@ test('an unexpected create response is not reported as saved and is not retried'
     }
 })
 
+test('an unknown create outcome warns that the resource may exist and is not retried', async (t) => {
+    const w = await startWriteApp(t)
+
+    const outcomes = [
+        { delivery: 'disconnect' },
+        { delivery: 'empty' },
+        { delivery: 'malformed' },
+        { delivery: 'normal', status: 500 },
+    ] as const
+
+    for (const outcome of outcomes) {
+        for (const [path, fields] of [
+            ['/write/temperature', { celsius: '37.0' }],
+            ['/write/note', { note: 'hello' }],
+        ] as const) {
+            Object.assign(w.f.createResponse, { status: 201, delivery: 'normal' }, outcome)
+
+            const stored = w.f.created.size
+            const before = postedResources(w.f)
+            const response = await post(w, path, form({ csrf: w.csrf, ...fields }))
+            const label = `${JSON.stringify(outcome)} ${path}`
+
+            assert.equal(response.statusCode, 502, label)
+            assert.match(response.body, /may already have been saved/, label)
+            assert.match(response.body, /check the EPJ before submitting again/, label)
+            assert.doesNotMatch(response.body, /Check registration and try a new launch/, label)
+            assert.doesNotMatch(response.body, /Created <code>/, label)
+            assert.equal(response.body.includes(UPSTREAM_DETAIL), false, label)
+            assert.equal(postedResources(w.f) - before, 1, `${label} must not be retried`)
+            assert.equal(w.f.created.size - stored, 1, label)
+        }
+    }
+})
+
+test('an upstream rejection of the create is not reported as possibly saved', async (t) => {
+    const w = await startWriteApp(t)
+
+    w.f.createResponse.status = 403
+
+    const response = await post(w, '/write/temperature', form({ csrf: w.csrf, celsius: '37.0' }))
+
+    assert.equal(response.statusCode, 502)
+    assert.match(response.body, /Upstream returned HTTP 403/)
+    assert.doesNotMatch(response.body, /may already have been saved/)
+    assert.equal(postedResources(w.f), 1)
+})
+
 test('a read-back that does not match the session is reported as unverified', async (t) => {
     const w = await startWriteApp(t)
 

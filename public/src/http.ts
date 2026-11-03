@@ -80,6 +80,16 @@ export const RoleSchema = z
     })
     .passthrough()
 
+// Carries the upstream status so a caller that writes can tell a definite rejection (4xx) from an unknown outcome.
+export class UpstreamStatusError extends AppError {
+    constructor(
+        public upstreamStatus: number,
+        message: string,
+    ) {
+        super(502, message)
+    }
+}
+
 export async function request(url: string, init: RequestInit = {}): Promise<Response> {
     const response = await fetch(url, {
         ...init,
@@ -89,8 +99,8 @@ export async function request(url: string, init: RequestInit = {}): Promise<Resp
 
     if (!response.ok) {
         // Never include upstream bodies: they can contain credentials or patient data.
-        throw new AppError(
-            502,
+        throw new UpstreamStatusError(
+            response.status,
             `Upstream returned HTTP ${response.status}. Check scopes, registration and mentor logs.`,
         )
     }
