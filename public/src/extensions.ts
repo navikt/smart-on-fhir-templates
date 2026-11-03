@@ -150,7 +150,10 @@ export async function createResource(
     const isCreatedResponse = response.status === 201 && created.resourceType === resource.resourceType
 
     if (!isCreatedResponse || !location || referenceId(config, location, resource.resourceType) !== created.id) {
-        throw new AppError(502, 'Create response must be 201 with a server ID and matching Location.')
+        throw new AppError(
+            502,
+            'Create response must be 201 with a server ID and matching Location. The resource may still exist, check the EPJ before retrying.',
+        )
     }
 
     return created

@@ -10,6 +10,7 @@ import { registerScopeDetective } from './scope-detective.ts'
 import { configureServer } from './server.ts'
 import { steps, type Steps } from './steps.ts'
 import { TRANSACTION_TTL_MS, type Chart, type Session, type Transaction } from './types.ts'
+import { registerWriteBack } from './write-back.ts'
 
 const LAUNCH_COOKIE = 'smart_launch'
 const SESSION_COOKIE = 'smart_session'
@@ -122,7 +123,12 @@ export async function buildApp(
 
         const sessionId = randomToken()
         const maxAge = Math.min(tokens.expires_in, MAX_SESSION_SECONDS)
-        sessions.set(sessionId, { tokens, context, expiresAt: Date.now() + maxAge * 1000 })
+        sessions.set(sessionId, {
+            tokens,
+            context,
+            expiresAt: Date.now() + maxAge * 1000,
+            csrfToken: randomToken(),
+        })
         reply.setCookie(SESSION_COOKIE, sessionId, { ...cookieOptions, maxAge })
 
         return reply.redirect('/app')
@@ -139,6 +145,7 @@ export async function buildApp(
 
     registerClinicalApp(app, routeDeps)
     registerScopeDetective(app, routeDeps)
+    registerWriteBack(app, routeDeps)
 
     return app
 }

@@ -58,6 +58,7 @@ export interface Session {
     tokens: Tokens
     context: Context
     expiresAt: number
+    csrfToken: string
 }
 
 export interface Chart {
