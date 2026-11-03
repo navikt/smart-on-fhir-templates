@@ -1,8 +1,10 @@
 import { z } from 'zod'
 
-import { id } from './http.ts'
+import { IdSchema } from './http.ts'
 
-export const discoverySchema = z.object({
+export const TRANSACTION_TTL_MS = 300_000
+
+export const DiscoverySchema = z.object({
     issuer: z.url(),
     authorization_endpoint: z.url(),
     token_endpoint: z.url(),
@@ -11,11 +13,32 @@ export const discoverySchema = z.object({
     code_challenge_methods_supported: z.array(z.string()),
     grant_types_supported: z.array(z.string()),
 })
-export type Discovery = z.infer<typeof discoverySchema>
+
+export type Discovery = z.infer<typeof DiscoverySchema>
+
+export const TokenSchema = z.object({
+    access_token: z.string().min(1),
+    token_type: z.literal('Bearer'),
+    expires_in: z.number().int().positive(),
+    scope: z.string(),
+    id_token: z.string().optional(),
+    patient: IdSchema.optional(),
+    encounter: IdSchema.optional(),
+    refresh_token: z.string().optional(),
+})
+
+export type Tokens = z.infer<typeof TokenSchema>
+
 export interface Launch {
     iss: string
     launch: string
 }
+
+export interface Pkce {
+    verifier: string
+    challenge: string
+}
+
 export interface Transaction {
     launch: Launch
     discovery: Discovery
@@ -24,22 +47,19 @@ export interface Transaction {
     challenge: string
     createdAt: number
 }
-export const tokenSchema = z.object({
-    access_token: z.string().min(1),
-    token_type: z.literal('Bearer'),
-    expires_in: z.number().int().positive(),
-    scope: z.string(),
-    id_token: z.string().optional(),
-    patient: id.optional(),
-    encounter: id.optional(),
-    refresh_token: z.string().optional(),
-})
-export type Tokens = z.infer<typeof tokenSchema>
+
 export interface Context {
     patient: string
     encounter: string
     practitioner: string
 }
+
+export interface Session {
+    tokens: Tokens
+    context: Context
+    expiresAt: number
+}
+
 export interface Chart {
     patientName: string
     age: number | null
