@@ -1,4 +1,4 @@
-import Fastify from 'fastify'
+import Fastify, { type FastifyInstance } from 'fastify'
 import { exportJWK, generateKeyPair, SignJWT } from 'jose'
 import assert from 'node:assert/strict'
 import { createHash } from 'node:crypto'
@@ -7,18 +7,50 @@ import { test, type TestContext } from 'node:test'
 import { buildApp } from '../src/app.ts'
 import type { Config } from '../src/config.ts'
 
-const clientId = 'smoke client'
-const secret = 'p@ss word&=/+é'
+const CLIENT_ID = 'smoke client'
+const CLIENT_SECRET = 'p@ss word&=/+é'
+const ACCESS_TOKEN = 'synthetic-access-token'
+const SCOPES = 'openid fhirUser launch patient/Patient.r'
 
-async function setup(t: TestContext, idTokenAudience = clientId) {
+interface LaunchResult {
+    authorizeUrl: URL
+    cookies: { smart_launch: string }
+    callback: string
+    state: string
+}
+
+interface Harness {
+    app: FastifyInstance
+    config: Config
+    launch: () => Promise<LaunchResult>
+    tokenRequests: URLSearchParams[]
+}
+
+function formDecode(value: string): string | null {
+    return new URLSearchParams(`v=${value}`).get('v')
+}
+
+function decodeBasicCredentials(authorization: string): { id: string | null; secret: string | null } {
+    const credentials = Buffer.from(authorization.replace('Basic ', ''), 'base64').toString()
+    const [id = '', secret = ''] = credentials.split(':')
+
+    return { id: formDecode(id), secret: formDecode(secret) }
+}
+
+async function setup(t: TestContext, idTokenAudience = CLIENT_ID): Promise<Harness> {
     const mock = Fastify()
     const signing = await generateKeyPair('RS256')
     const challenges = new Map<string, string>()
     const tokenRequests: URLSearchParams[] = []
-    const origin = () => `http://127.0.0.1:${(mock.server.address() as { port: number }).port}`
+
+    function origin(): string {
+        return `http://127.0.0.1:${(mock.server.address() as { port: number }).port}`
+    }
+
     mock.addContentTypeParser('application/x-www-form-urlencoded', { parseAs: 'string' }, (_request, body, done) =>
         done(null, new URLSearchParams(String(body))),
     )
+
     mock.get('/fhir/.well-known/smart-configuration', async () => ({
         issuer: `${origin()}/oidc`,
         authorization_endpoint: `${origin()}/oidc/authorize`,
@@ -28,35 +60,38 @@ async function setup(t: TestContext, idTokenAudience = clientId) {
         code_challenge_methods_supported: ['S256'],
         grant_types_supported: ['authorization_code'],
     }))
+
     mock.get<{ Querystring: Record<string, string> }>('/oidc/authorize', async (request, reply) => {
         const code = `code-${challenges.size + 1}`
         challenges.set(code, request.query.code_challenge!)
-        return reply.redirect(
-            `${request.query.redirect_uri}?${new URLSearchParams({ code, state: request.query.state! })}`,
-        )
+
+        const callbackQuery = new URLSearchParams({ code, state: request.query.state! })
+
+        return reply.redirect(`${request.query.redirect_uri}?${callbackQuery}`)
     })
+
     mock.post<{ Body: URLSearchParams }>('/oidc/token', async (request, reply) => {
         tokenRequests.push(request.body)
-        const [id, password] = Buffer.from(request.headers.authorization!.replace('Basic ', ''), 'base64')
-            .toString()
-            .split(':')
-            .map((part) => new URLSearchParams(`v=${part}`).get('v'))
-        const challenge = challenges.get(request.body.get('code') ?? '')
-        challenges.delete(request.body.get('code') ?? '')
+
+        const { id, secret } = decodeBasicCredentials(request.headers.authorization!)
+        const code = request.body.get('code') ?? ''
         const verifier = request.body.get('code_verifier') ?? ''
-        if (
-            id !== clientId ||
-            password !== secret ||
-            !challenge ||
-            createHash('sha256').update(verifier).digest('base64url') !== challenge
-        ) {
+        const challenge = challenges.get(code)
+        challenges.delete(code)
+
+        const hasValidCredentials = id === CLIENT_ID && secret === CLIENT_SECRET
+        const hasValidProof =
+            challenge !== undefined && createHash('sha256').update(verifier).digest('base64url') === challenge
+
+        if (!hasValidCredentials || !hasValidProof) {
             return reply.code(400).send({ error: 'invalid_grant' })
         }
+
         return {
-            access_token: 'synthetic-access-token',
+            access_token: ACCESS_TOKEN,
             token_type: 'Bearer',
             expires_in: 300,
-            scope: 'openid fhirUser launch patient/Patient.r',
+            scope: SCOPES,
             patient: 'p1',
             encounter: 'e1',
             id_token: await new SignJWT({ fhirUser: 'Practitioner/h1' })
@@ -69,36 +104,48 @@ async function setup(t: TestContext, idTokenAudience = clientId) {
                 .sign(signing.privateKey),
         }
     })
+
     mock.get('/oidc/jwks', async () => ({ keys: [await exportJWK(signing.publicKey)] }))
+
     mock.get('/fhir/Patient/p1', async (request, reply) => {
-        if (request.headers.authorization !== 'Bearer synthetic-access-token') return reply.code(401).send({})
+        if (request.headers.authorization !== `Bearer ${ACCESS_TOKEN}`) {
+            return reply.code(401).send({})
+        }
+
         return { resourceType: 'Patient', id: 'p1', name: [{ given: ['Smoke'], family: '<Patient>' }] }
     })
+
     await mock.listen({ port: 0, host: '127.0.0.1' })
+
     const config: Config = {
         port: 3100,
         fhirBase: `${origin()}/fhir`,
         issuer: `${origin()}/oidc`,
-        clientId,
+        clientId: CLIENT_ID,
         redirectUri: 'http://localhost:3100/callback',
-        scopes: 'openid fhirUser launch patient/Patient.r',
-        secret,
+        scopes: SCOPES,
+        secret: CLIENT_SECRET,
     }
     const app = await buildApp(config)
+
     t.after(async () => {
         await app.close()
         await mock.close()
     })
 
-    async function launch() {
+    async function launch(): Promise<LaunchResult> {
         const started = await app.inject({
             url: `/launch?${new URLSearchParams({ iss: config.fhirBase, launch: 'L1' })}`,
         })
+
         assert.equal(started.statusCode, 302)
+
         const authorizeUrl = new URL(started.headers.location as string)
         const cookies = { smart_launch: started.cookies.find((c) => c.name === 'smart_launch')!.value }
+
         const authorized = await fetch(authorizeUrl, { redirect: 'manual' })
         const callback = new URL(authorized.headers.get('location')!)
+
         return {
             authorizeUrl,
             cookies,
@@ -106,6 +153,7 @@ async function setup(t: TestContext, idTokenAudience = clientId) {
             state: callback.searchParams.get('state')!,
         }
     }
+
     return { app, config, launch, tokenRequests }
 }
 
@@ -113,6 +161,7 @@ test('launch, callback and Patient page', async (t) => {
     const { app, config, launch, tokenRequests } = await setup(t)
     const { authorizeUrl, cookies, callback } = await launch()
     const params = authorizeUrl.searchParams
+
     assert.equal(params.get('aud'), config.fhirBase)
     assert.equal(params.get('launch'), 'L1')
     assert.equal(params.get('redirect_uri'), config.redirectUri)
@@ -120,16 +169,19 @@ test('launch, callback and Patient page', async (t) => {
     assert.ok(params.get('state') && params.get('code_challenge'))
 
     const finished = await app.inject({ url: callback, cookies })
+
     assert.equal(finished.statusCode, 302)
     assert.equal(tokenRequests.length, 1)
-    const home = await app.inject({
-        url: '/',
-        cookies: { smart_session: finished.cookies.find((c) => c.name === 'smart_session')!.value },
-    })
+
+    const sessionCookie = finished.cookies.find((c) => c.name === 'smart_session')!
+    const home = await app.inject({ url: '/', cookies: { smart_session: sessionCookie.value } })
+
     assert.equal(home.statusCode, 200)
     assert.match(home.body, /Smoke &lt;Patient&gt;/)
     assert.match(home.body, /Practitioner\/h1/)
+
     const replayed = await app.inject({ url: callback, cookies })
+
     assert.equal(replayed.statusCode, 400)
     assert.equal(tokenRequests.length, 1)
 })
@@ -137,17 +189,23 @@ test('launch, callback and Patient page', async (t) => {
 test('rejects bad state and foreign iss', async (t) => {
     const { app, launch, tokenRequests } = await setup(t)
     const { cookies, callback, state } = await launch()
+
     const tampered = await app.inject({ url: callback.replace(state, 'wrong'), cookies })
+
     assert.equal(tampered.statusCode, 400)
     assert.equal(tokenRequests.length, 0)
+
     const foreign = await app.inject({ url: '/launch?iss=https://untrusted.invalid/fhir&launch=L1' })
+
     assert.equal(foreign.statusCode, 400)
 })
 
 test('rejects an ID token issued for another client', async (t) => {
     const { app, launch } = await setup(t, 'someone-else')
     const { cookies, callback } = await launch()
+
     const finished = await app.inject({ url: callback, cookies })
+
     assert.equal(finished.statusCode, 502)
     assert.equal(
         finished.cookies.find((c) => c.name === 'smart_session'),
