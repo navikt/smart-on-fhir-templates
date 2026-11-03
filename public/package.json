@@ -9,7 +9,10 @@
     "start:reference": "node --env-file-if-exists=.env --import tsx src/main.ts --reference",
     "generate-key": "node --env-file-if-exists=.env --import tsx src/generate-key.ts",
     "test": "node --import tsx --test --test-reporter=spec test/*.test.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "fmt": "oxfmt \"src/**/*.ts\" \"test/**/*.ts\"",
+    "fmt:check": "oxfmt --check \"src/**/*.ts\" \"test/**/*.ts\"",
+    "lint": "oxlint --deny-warnings src test"
   },
   "dependencies": {
     "@fastify/cookie": "11.1.3",
@@ -19,6 +22,9 @@
   },
   "devDependencies": {
     "@types/node": "26.6.5",
+    "oxfmt": "0.76.0",
+    "oxlint": "1.90.0",
+    "oxlint-tsgolint": "7.0.2005",
     "tsx": "4.23.15",
     "typescript": "7.0.2"
   }
