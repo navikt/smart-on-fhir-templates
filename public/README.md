@@ -41,15 +41,9 @@ Log in at https://epj.ekstern.dev.nav.no with your own test clinician, open a pa
 
 ## 5. Build your own
 
-Implement the TODOs in [src/steps.ts](./src/steps.ts), then run `npm start`.
+On `main`, implement the TODOs in [src/steps.ts](./src/steps.ts), then run `npm start`. This branch has them done: see [SOLUTIONS.md](./SOLUTIONS.md) for the walkthroughs, scopes per feature and break-it checks.
 
-```ts
-pkce() {
-    return unfinished(3, 'Generate a random PKCE verifier and its base64url SHA-256 challenge')
-},
-```
-
-The matching function is `pkce` in [src/reference.ts](./src/reference.ts).
+The reference implementation of each step is in [src/reference.ts](./src/reference.ts), and `npm run start:reference` runs it.
 
 ## 6. Registration
 
