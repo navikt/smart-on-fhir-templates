@@ -3,7 +3,7 @@ import { test } from 'node:test'
 import { z } from 'zod'
 
 import { configProblems, readConfig } from '../src/config.ts'
-import { age, bundle, fhirUrl, json, PatientSchema, referenceId } from '../src/http.ts'
+import { age, bundle, fhirUrl, isSameSecret, json, PatientSchema, referenceId } from '../src/http.ts'
 
 import { fixture } from './fixture.ts'
 
@@ -47,6 +47,12 @@ test('Scaffolding: FHIR URLs cannot leak bearer tokens to another origin or path
 
     assert.equal(referenceId(f.config, `${f.config.fhirBase}/Practitioner/h1`, 'Practitioner'), 'h1')
     assert.throws(() => referenceId(f.config, 'Patient/p1', 'Practitioner'))
+})
+
+test('Scaffolding: isSameSecret compares equal-length secrets only', () => {
+    assert.equal(isSameSecret('abc123', 'abc123'), true)
+    assert.equal(isSameSecret('abc123', 'abc124'), false)
+    assert.equal(isSameSecret('abc', 'abc123'), false)
 })
 
 test('Scaffolding: age boundaries and incomplete FHIR data are honest', () => {
