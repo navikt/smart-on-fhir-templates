@@ -2,6 +2,7 @@ import type { FastifyInstance } from 'fastify'
 
 import { AppError } from './config.ts'
 import { escapeHtml, page } from './http.ts'
+import { renderChecklist, StepError } from './progress.ts'
 
 const CONTENT_SECURITY_POLICY = "default-src 'none'; frame-ancestors 'none'; form-action 'self'; base-uri 'none'"
 
@@ -22,6 +23,13 @@ export function configureServer(app: FastifyInstance): void {
     app.setErrorHandler((error, request, reply) => {
         // Fastify request logging is disabled so callback codes never reach access logs.
         request.log.warn({ category: error instanceof Error ? error.name : 'UnknownError' }, 'SMART request failed')
+
+        if (error instanceof StepError) {
+            return reply
+                .code(error.status)
+                .type('text/html')
+                .send(page(`SMART launch: TODO ${error.step} needs work`, renderChecklist(error.checklist)))
+        }
 
         const { status, message } = error instanceof AppError ? error : UNEXPECTED_ERROR
 

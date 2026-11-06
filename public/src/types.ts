@@ -1,6 +1,8 @@
 import { z } from 'zod'
 
+import type { Config } from './config.ts'
 import { IdSchema } from './http.ts'
+import type { Attempt } from './progress.ts'
 
 export const TRANSACTION_TTL_MS = 300_000
 
@@ -58,6 +60,7 @@ export interface Session {
     tokens: Tokens
     context: Context
     expiresAt: number
+    attempt: Attempt
 }
 
 export interface Chart {
@@ -69,4 +72,17 @@ export interface Chart {
     clinician?: string
     organization?: string
     practitionerRoles?: number
+}
+
+export interface Steps {
+    readLaunch(query: unknown, config: Config): Launch
+    discover(config: Config): Promise<Discovery>
+    pkce(): Pkce
+    newTransaction(launch: Launch, discovery: Discovery, proof: Pkce): Transaction
+    authorizationUrl(config: Config, transaction: Transaction): string
+    validateCallback(query: unknown, transaction: Transaction): string
+    exchange(config: Config, transaction: Transaction, code: string): Promise<Tokens>
+    verifyIdentity(config: Config, discovery: Discovery, tokens: Tokens): Promise<string>
+    launchContext(tokens: Tokens, practitioner: string): Context
+    loadChart(config: Config, tokens: Tokens, context: Context): Promise<Chart>
 }

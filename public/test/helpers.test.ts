@@ -1,8 +1,9 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
+import { z } from 'zod'
 
 import { configProblems, readConfig } from '../src/config.ts'
-import { age, bundle, fhirUrl, PatientSchema, referenceId } from '../src/http.ts'
+import { age, bundle, fhirUrl, json, PatientSchema, referenceId } from '../src/http.ts'
 
 import { fixture } from './fixture.ts'
 
@@ -15,13 +16,9 @@ test('Scaffolding: host configuration is validated without event access', async 
         AUTH_ISSUER: f.config.issuer,
         CLIENT_ID: f.config.clientId,
         SCOPES: f.config.scopes,
-        CLIENT_SECRET: f.config.secret,
-        PRIVATE_JWK_PATH: f.config.privateJwkPath,
-        PATIENT_IDENTIFIER: f.config.patientIdentifier,
     }
     const config = readConfig(env)
 
-    assert.equal(config.variant, f.config.variant)
     assert.equal(config.port, 3100)
     assert.throws(() => readConfig({ ...env, CLIENT_ID: '' }))
     assert.throws(
@@ -31,14 +28,6 @@ test('Scaffolding: host configuration is validated without event access', async 
             'CLIENT_ID: Set CLIENT_ID in .env to the client ID the host registered for you',
     )
     assert.throws(() => readConfig({ ...env, FHIR_BASE_URL: 'http://insecure.example/fhir' }))
-
-    if (config.variant === 'client-secret') {
-        assert.throws(() => readConfig({ ...env, CLIENT_SECRET: undefined }))
-    }
-
-    if (config.variant === 'private-key-jwt' || config.variant === 'backend-services') {
-        assert.throws(() => readConfig({ ...env, PRIVATE_JWK_PATH: undefined }))
-    }
 })
 
 test('Scaffolding: FHIR URLs cannot leak bearer tokens to another origin or path', async (t) => {
@@ -78,4 +67,18 @@ test('Scaffolding: age boundaries and incomplete FHIR data are honest', () => {
 
     assert.deepEqual(patients.parse({ resourceType: 'Bundle', type: 'searchset' }), [])
     assert.throws(() => patients.parse(paginated), /pagination/)
+})
+
+test('Scaffolding: unparsable or unexpected upstream JSON never reaches the error message', async (t) => {
+    const secret = 'synthetic-secret-in-upstream-body'
+    const bodies = [`{"${secret}`, JSON.stringify({ access_token: secret, token_type: 42 })]
+
+    for (const body of bodies) {
+        t.mock.method(globalThis, 'fetch', async () => new Response(body, { status: 200 }))
+
+        await assert.rejects(
+            json('https://ehr.example/x', z.object({ token_type: z.literal('Bearer') })),
+            (error: Error) => error.message.startsWith('Upstream') && !error.message.includes(secret),
+        )
+    }
 })

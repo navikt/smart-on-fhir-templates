@@ -1,20 +1,12 @@
 import { z } from 'zod'
 
-import { variant } from './variant.ts'
-
-export type Variant = 'public' | 'client-secret' | 'private-key-jwt' | 'backend-services'
-
 export interface Config {
-    variant: Variant
     port: number
     fhirBase: string
     issuer: string
     clientId: string
     redirectUri: string
     scopes: string
-    secret?: string
-    privateJwkPath?: string
-    patientIdentifier?: string
 }
 
 export class AppError extends Error {
@@ -41,13 +33,16 @@ const EnvSchema = z.object({
         ),
     REDIRECT_URI: z.url().default('http://localhost:3100/callback'),
     SCOPES: z.string().trim().min(1),
-    CLIENT_SECRET: z.string().min(1).optional(),
-    PRIVATE_JWK_PATH: z.string().min(1).optional(),
-    PATIENT_IDENTIFIER: z.string().min(1).optional(),
 })
 
+export class UnfinishedError extends AppError {
+    constructor(step: number, task: string) {
+        super(501, `TODO ${step}: ${task}. See src/steps.ts.`)
+    }
+}
+
 export function unfinished(step: number, task: string): never {
-    throw new AppError(501, `TODO ${step}: ${task}. See src/steps.ts and src/reference.ts.`)
+    throw new UnfinishedError(step, task)
 }
 
 export function splitScopes(scopes: string): string[] {
@@ -87,35 +82,12 @@ export function readConfig(env = process.env): Config {
     const issuer = trustedBaseUrl(values.AUTH_ISSUER)
     trustedUrl(values.REDIRECT_URI)
 
-    const needsSecret = variant === 'client-secret'
-    const needsPrivateKey = variant === 'private-key-jwt' || variant === 'backend-services'
-
-    if (needsSecret && !values.CLIENT_SECRET) {
-        throw new AppError(400, 'Set CLIENT_SECRET in .env to the secret you gave the host.')
-    }
-
-    if (needsPrivateKey && !values.PRIVATE_JWK_PATH) {
-        throw new AppError(400, 'Set PRIVATE_JWK_PATH in .env (run npm run generate-key to create the key).')
-    }
-
-    if (variant === 'backend-services') {
-        const onlySystemScopes = splitScopes(values.SCOPES).every((scope) => scope.startsWith('system/'))
-
-        if (!values.PATIENT_IDENTIFIER || !onlySystemScopes) {
-            throw new AppError(400, 'Backend Services needs PATIENT_IDENTIFIER and only system scopes.')
-        }
-    }
-
     return {
-        variant,
         port: values.PORT,
         fhirBase,
         issuer,
         clientId: values.CLIENT_ID,
         redirectUri: values.REDIRECT_URI,
         scopes: values.SCOPES,
-        secret: values.CLIENT_SECRET,
-        privateJwkPath: values.PRIVATE_JWK_PATH,
-        patientIdentifier: values.PATIENT_IDENTIFIER,
     }
 }

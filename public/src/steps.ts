@@ -1,19 +1,5 @@
 import { unfinished } from './config.ts'
-import type * as reference from './reference.ts'
-
-export type Steps = Pick<
-    typeof reference,
-    | 'readLaunch'
-    | 'discover'
-    | 'pkce'
-    | 'newTransaction'
-    | 'authorizationUrl'
-    | 'validateCallback'
-    | 'exchange'
-    | 'verifyIdentity'
-    | 'launchContext'
-    | 'loadChart'
->
+import type { Steps } from './types.ts'
 
 export const steps: Steps = {
     readLaunch(query, config) {
@@ -35,7 +21,10 @@ export const steps: Steps = {
         return unfinished(6, 'Check state and transaction age before accepting the code')
     },
     async exchange(config, transaction, code) {
-        return unfinished(7, "Exchange the code server-side using this variant's client authentication")
+        return unfinished(
+            7,
+            'Exchange the code server-side; a public client sends client_id and the PKCE verifier, no secret',
+        )
     },
     async verifyIdentity(config, discovery, tokens) {
         return unfinished(8, 'Verify ID-token signature, issuer, audience and expiry before reading fhirUser')
