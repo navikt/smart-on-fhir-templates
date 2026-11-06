@@ -64,6 +64,15 @@ test('Progress: unfinished steps return 501 with the first TODO failing and the 
     )
     assert.match(response.body, /pre-registers hackathon-public/)
     assert.match(response.body, /not a security certification/)
+    assert.match(itemFor(response.body, 1), /Why: iss names the FHIR server/)
+    assert.match(itemFor(response.body, 1), /href="[^"]*app-launch\.html#step-2-launch-ehr">SMART spec/)
+    assert.match(itemFor(response.body, 1), /public\/src\/steps\.ts">solved steps\.ts/)
+    assert.match(
+        itemFor(response.body, 1),
+        /git fetch https:\/\/github\.com\/navikt\/smart-on-fhir-templates solutions\ngit checkout FETCH_HEAD -- src\/steps\.ts/,
+    )
+    assert.doesNotMatch(response.body, /Before you build/)
+    assert.doesNotMatch(itemFor(response.body, 2), /Why:|git fetch/)
 })
 
 test('Progress: a wrong PKCE challenge fails step 3 after steps 1 and 2 pass', async (t) => {
@@ -264,8 +273,13 @@ test('Progress: shape-correct steps reach the chart with every step passing and 
     assert.equal(count(chart.body, PASSED), 1 + 10)
     assert.equal(count(chart.body, FAILED) + count(chart.body, PENDING), 0)
     assert.match(chart.body, /Progress: 10 of 10 steps OK/)
+    assert.match(itemFor(chart.body, 3), /<details><summary>Why this step<\/summary>/)
+    assert.doesNotMatch(chart.body, /git fetch/)
+    assert.match(chart.body, /<h2>Before you build<\/h2>/)
+    assert.match(chart.body, /network tab/)
+    assert.match(chart.body, /public\/EXERCISES\.md#problem-cards/)
     assert.match(chart.body, /<dt>clinician<\/dt><dd>Test clinician<\/dd>/)
-    assert.doesNotMatch(chart.body, /access_token|leaked-refresh-token|refresh_token/)
+    assert.doesNotMatch(chart.body, /<dt>(access_token|refresh_token)<\/dt>|leaked-refresh-token/)
     assert.equal(chart.body.includes((await f.tokens()).access_token), false)
 })
 
@@ -288,6 +302,7 @@ test('Progress: a chart failure keeps steps 1 to 9 passing', async (t) => {
     assert.equal(count(chart.body, PASSED), 1 + 9)
     assert.match(itemFor(chart.body, 10), /❌/)
     assert.match(itemFor(chart.body, 10), /status is missing or does not match/)
+    assert.doesNotMatch(chart.body, /Before you build/)
 })
 
 test('Progress: errors outside a step keep the generic page', async (t) => {

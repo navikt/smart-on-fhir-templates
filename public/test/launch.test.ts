@@ -108,7 +108,7 @@ test('Scaffolding: pages never contain tokens, codes or the PKCE verifier', asyn
         assert.equal(browserOutput.includes(secret as string), false, `${String(secret).slice(0, 12)} leaked`)
     }
 
-    assert.doesNotMatch(browserOutput, /id_token|code_verifier/)
+    assert.doesNotMatch(browserOutput, /(id_token|code_verifier)(=|&quot;|")/)
 })
 
 test('Scaffolding: the app session expires with the token and never outlives 30 minutes', async (t) => {

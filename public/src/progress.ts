@@ -1,8 +1,20 @@
 import { AppError, UnfinishedError } from './config.ts'
 import { escapeHtml, randomToken } from './http.ts'
 
-const SPEC = 'https://build.fhir.org/ig/HL7/smart-app-launch/en/app-launch.html'
-const BREAK_IT = 'https://github.com/navikt/smart-on-fhir-templates/blob/main/public/EXERCISES.md#break-it'
+const SPEC_BASE = 'https://build.fhir.org/ig/HL7/smart-app-launch/en'
+const SPEC = `${SPEC_BASE}/app-launch.html`
+const SPEC_SCOPES = `${SPEC_BASE}/scopes-and-launch-context.html`
+const REPO = 'https://github.com/navikt/smart-on-fhir-templates/blob'
+const BREAK_IT = `${REPO}/main/public/EXERCISES.md#break-it`
+const PROBLEM_CARDS = `${REPO}/main/public/EXERCISES.md#problem-cards`
+const STUCK = `${REPO}/main/public/README.md#stuck`
+const SOLVED_STEPS = `${REPO}/solutions/public/src/steps.ts`
+const SOLUTIONS_GUIDE = `${REPO}/solutions/public/SOLUTIONS.md`
+const RESCUE_COMMANDS = [
+    'cp src/steps.ts steps.mine.txt',
+    'git fetch https://github.com/navikt/smart-on-fhir-templates solutions',
+    'git checkout FETCH_HEAD -- src/steps.ts',
+].join('\n')
 
 const MAX_ATTEMPTS = 500
 const ATTEMPT_TTL_MS = 1_800_000
@@ -32,6 +44,8 @@ interface StepDefinition {
     phase: string
     title: string
     hint: string
+    why: string
+    spec: string
     retry: 'reload' | 'relaunch'
     caveat?: string
 }
@@ -52,6 +66,8 @@ const DEFINITIONS: StepDefinition[] = [
         phase: 'step-2-launch-ehr',
         title: 'Receive iss and launch',
         hint: 'Return { iss, launch } from the query. iss must equal FHIR_BASE_URL and launch must be the non-empty launch value from the URL.',
+        why: 'iss names the FHIR server that started the launch and launch is the one-time ID for it. An app that accepts any iss can be sent to a server it was never meant to talk to, and would hand that server its launch ID.',
+        spec: `${SPEC}#step-2-launch-ehr`,
         retry: 'reload',
     },
     {
@@ -60,6 +76,8 @@ const DEFINITIONS: StepDefinition[] = [
         phase: 'step-3-discovery',
         title: 'Fetch the SMART configuration',
         hint: 'Fetch FHIR_BASE_URL/.well-known/smart-configuration and return it only if issuer equals AUTH_ISSUER, the authorization, token and JWKS endpoints use HTTPS on the issuer origin, and it advertises none, authorization_code and S256.',
+        why: 'The configuration tells the app where to send the user, the code and later the tokens. If it accepts endpoints from any host, a wrong or tampered document sends authorization traffic somewhere else.',
+        spec: `${SPEC}#step-3-discovery`,
         retry: 'reload',
     },
     {
@@ -68,6 +86,8 @@ const DEFINITIONS: StepDefinition[] = [
         phase: 'step-4-authorization-code',
         title: 'Generate the PKCE pair',
         hint: 'The verifier is 43 to 128 characters from A-Z, a-z, 0-9, hyphen, dot, underscore and tilde. The challenge is the base64url SHA-256 of the verifier, without padding.',
+        why: 'The challenge goes in the browser redirect and the verifier stays on your server. Someone who intercepts the authorization code cannot exchange it without the verifier. A public client has no secret, so this is its proof.',
+        spec: `${SPEC}#considerations-for-pkce-support`,
         retry: 'reload',
     },
     {
@@ -76,6 +96,8 @@ const DEFINITIONS: StepDefinition[] = [
         phase: 'step-4-authorization-code',
         title: 'Create state and a server-side transaction',
         hint: 'Return launch, discovery, verifier and challenge unchanged, plus a random state of at least 21 characters and createdAt set to Date.now().',
+        why: 'state links a callback to the launch that started it. If it is guessable, or the launch is not stored on the server, an attacker can make your app accept a callback it never asked for (login CSRF). The verifier must stay server-side, never in the browser.',
+        spec: `${SPEC}#step-4-authorization-code`,
         retry: 'reload',
         caveat: 'The check only looks at the length of state. It cannot tell whether state is random.',
     },
@@ -85,6 +107,8 @@ const DEFINITIONS: StepDefinition[] = [
         phase: 'step-4-authorization-code',
         title: 'Build the authorization URL',
         hint: 'Start from authorization_endpoint and add response_type=code, client_id, redirect_uri, scope (the SCOPES set), aud (the iss), launch, state, code_challenge and code_challenge_method=S256, each exactly once. Never add code_verifier.',
+        why: 'aud tells the authorization server which FHIR server the token is for, so it is not issued for a different one. The code_challenge commits to the verifier. code_verifier in this URL would give the secret to the browser and its history, which defeats PKCE.',
+        spec: `${SPEC}#step-4-authorization-code`,
         retry: 'reload',
     },
     {
@@ -93,6 +117,8 @@ const DEFINITIONS: StepDefinition[] = [
         phase: 'step-4-authorization-code',
         title: 'Validate the callback',
         hint: 'Return the code from the callback query, but only after state matches the transaction, the transaction has not expired and no error was returned.',
+        why: 'A callback with a missing or wrong state, an expired transaction or an error is not the answer to your request. Accepting it lets an attacker feed your app their own authorization code, or replay an old callback.',
+        spec: `${SPEC}#step-4-authorization-code`,
         retry: 'relaunch',
         caveat: 'The check only sees the returned code. It cannot tell whether state is verified.',
     },
@@ -102,6 +128,8 @@ const DEFINITIONS: StepDefinition[] = [
         phase: 'step-5-access-token',
         title: 'Exchange the code for tokens',
         hint: 'POST grant_type=authorization_code, code, code_verifier, redirect_uri and client_id to token_endpoint with no client secret. Return the token response (Bearer, positive expires_in, scope).',
+        why: 'The code is short-lived and only useful together with the verifier. Exchanging it from your server keeps the tokens out of the browser, and sending the verifier proves you are the app that started the request.',
+        spec: `${SPEC}#step-5-access-token`,
         retry: 'relaunch',
     },
     {
@@ -110,6 +138,8 @@ const DEFINITIONS: StepDefinition[] = [
         phase: 'step-5-access-token',
         title: 'Verify the ID token',
         hint: 'Verify signature, issuer, audience and expiry, then return the Practitioner ID from the fhirUser claim.',
+        why: 'The ID token says who signed in. A token with an unchecked signature, issuer or audience can be forged or issued for another app, so your app could show the wrong clinician.',
+        spec: `${SPEC_SCOPES}#steps-for-using-an-id-token`,
         retry: 'relaunch',
         caveat: 'The check only compares the returned ID with the claim. It cannot tell whether the signature is verified.',
     },
@@ -119,6 +149,8 @@ const DEFINITIONS: StepDefinition[] = [
         phase: 'step-5-access-token',
         title: 'Read the launch context',
         hint: 'Return patient and encounter from the token response, and the practitioner from the previous step.',
+        why: 'The EPJ decides which patient and encounter the app was launched for and returns them with the access token. Taking them from the URL or a form lets anyone with the link point the app at another patient.',
+        spec: `${SPEC_SCOPES}#launch-context-arrives-with-your-access_token`,
         retry: 'relaunch',
     },
     {
@@ -127,8 +159,20 @@ const DEFINITIONS: StepDefinition[] = [
         phase: 'step-6-fhir-api',
         title: 'Load the chart',
         hint: 'Read the Patient and the Encounter that matches the launch context, which must be in-progress. Return patientName, age, encounter, status and started.',
+        why: 'The chart must come from the launch context, and the encounter must be the in-progress one. Otherwise the clinician sees a different patient or a finished consultation while believing it is the current one.',
+        spec: `${SPEC}#step-6-fhir-api`,
         retry: 'relaunch',
     },
+]
+
+const BEFORE_YOU_BUILD = [
+    'Why does SMART exist, and what problem does it solve for a clinician?',
+    'For each of iss, launch, state, code_verifier, aud and code: what does it protect against, and where in the network tab do you see it?',
+    'Which endpoints in .well-known/smart-configuration matter, and why do you only trust them on the issuer origin?',
+    'Compare the scopes you requested with scope in the token response. What was granted, and what would be refused?',
+    'Why do access tokens stay on the server and not in the browser?',
+    'Which three client authentication types does SMART define, and which one fits a Norwegian EPJ vendor today?',
+    'How does HelseID relate to, and differ from, the authorization server of the EPJ?',
 ]
 
 const STEP_COUNT = DEFINITIONS.length
@@ -288,12 +332,22 @@ function nextAction(definition: StepDefinition): string {
     return 'Fix src/steps.ts and save, then click Hackathon starter in the app picker again. You can keep the consultation open.'
 }
 
+function renderWhy(definition: StepDefinition): string {
+    return `${escapeHtml(definition.why)} <a href="${definition.spec}">SMART spec</a>`
+}
+
+function renderRescue(): string {
+    return `<p>Rescue: see this step in the <a href="${SOLVED_STEPS}">solved steps.ts</a>, or replace your whole src/steps.ts (run in this folder, your copy is kept in steps.mine.txt). More options in <a href="${STUCK}">Stuck?</a></p>
+        <pre>${escapeHtml(RESCUE_COMMANDS)}</pre>`
+}
+
 function renderItem(item: ChecklistItem, definition: StepDefinition): string {
     const label = `TODO ${definition.step} ${escapeHtml(definition.name)}: ${escapeHtml(definition.title)}`
     const caveat = definition.caveat ? `<p><small>${escapeHtml(definition.caveat)}</small></p>` : ''
 
     if (item.state === 'passed') {
-        return `<li>✅ ${label}${caveat}</li>`
+        return `<li>✅ ${label}
+        <details><summary>Why this step</summary><p>${renderWhy(definition)}</p></details>${caveat}</li>`
     }
 
     if (item.state === 'pending') {
@@ -307,8 +361,22 @@ function renderItem(item: ChecklistItem, definition: StepDefinition): string {
     return `<li>❌ <strong>${label}</strong>
         <p>${problem}</p>
         <p>Hint: ${escapeHtml(definition.hint)}</p>
+        <p>Why: ${renderWhy(definition)}</p>
         <p>Next: ${escapeHtml(nextAction(definition))}</p>
+        ${renderRescue()}
         ${caveat}</li>`
+}
+
+function renderBeforeYouBuild(): string {
+    const prompts = BEFORE_YOU_BUILD.map((prompt) => `<li>${escapeHtml(prompt)}</li>`).join('')
+
+    return `
+        <h2>Before you build</h2>
+        <p>Talk these through as a team, out loud. Open your browser's network tab, start a new launch from the EPJ and narrate each redirect to each other. Skipped Bronze? The <a href="${SOLUTIONS_GUIDE}">solutions guide</a> walks through the same steps.</p>
+        <ol>${prompts}</ol>
+        <p>The prompts help you explain the flow. They do not make your app certified or secure.</p>
+        <p>When you can answer them, pick a <a href="${PROBLEM_CARDS}">problem card</a> or bring your own idea.</p>
+    `
 }
 
 export function renderChecklist(checklist: Checklist): string {
@@ -337,5 +405,6 @@ export function renderChecklist(checklist: Checklist): string {
         <p>✅ means the returned value has the right shape. It is not a security certification. See <a href="${BREAK_IT}">Break it</a> for checks that provoke real rejections.</p>
         <p>Saving a file restarts the app and clears this progress and all sessions.</p>
         ${phases}
+        ${passed === STEP_COUNT ? renderBeforeYouBuild() : ''}
     `
 }
