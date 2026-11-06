@@ -16,7 +16,7 @@ Node 22 (`.nvmrc`).
 cp .env.example .env
 ```
 
-Edit `.env` and set `CLIENT_ID` to the shared hackathon client ([.env.example](./.env.example)).
+Edit `.env` and set `CLIENT_ID` to the shared hackathon client ([.env.example](./.env.example)). After a configuration error, run `npm start` again.
 
 ```sh
 PORT=3100
@@ -29,19 +29,26 @@ SCOPES=openid fhirUser launch patient/Patient.r patient/Encounter.s
 
 `hackathon-public` is already registered, so there is nothing to send the host.
 
-## 3. Run the reference
+## 3. Start
 
 ```sh
-npm run start:reference
+npm start
 ```
+
+`npm start` restarts the app when you save a file. A restart clears in-memory sessions and progress.
 
 ## 4. Launch
 
 Log in at https://epj.ekstern.dev.nav.no with your own test clinician, open a patient marked "Pågår nå" and pick **Hackathon starter** in the app picker.
 
+The page lists ten steps grouped by the [SMART App Launch](https://build.fhir.org/ig/HL7/smart-app-launch/en/app-launch.html) phases. Each step shows ✅, ❌ or ⏳ with a hint and the next action. The first launch fails at TODO 1.
+
 ## 5. Build your own
 
-Implement the TODOs in [src/steps.ts](./src/steps.ts), then run `npm start`.
+Implement the next TODO in [src/steps.ts](./src/steps.ts), then retry:
+
+- TODO 1 to 5 failed: refresh the tab within 5 minutes of the launch.
+- Later, or TODO 6 to 10: pick **Hackathon starter** in the app picker again. You do not need to close the consultation.
 
 ```ts
 pkce() {
@@ -49,7 +56,12 @@ pkce() {
 },
 ```
 
-The matching function is `pkce` in [src/reference.ts](./src/reference.ts).
+Notes:
+
+- ✅ means the output has the right shape. It is not a security certification: the checks do not prove randomness, state handling or ID token signature verification. See [Break it](./EXERCISES.md#break-it).
+- Errors you throw are shown on the page. Known codes, verifiers and tokens are redacted, other text is not, so keep secrets out of error messages.
+- Progress belongs to the browser that started the launch.
+- Answers are on the `solutions` branch.
 
 ## 6. Registration
 

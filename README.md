@@ -19,7 +19,7 @@
    npm start
    ```
 
-   In `public/`, run `npm run start:reference` first to see a working launch.
+   In `public/`, `npm start` shows a checklist of ten TODOs to implement. The answers are on the `solutions` branch.
 
 3. Get your own test clinician login from the host. The host registers each app in nav-epj by hand, except the shared hackathon client in `public/`. The folder README lists what to send.
 
@@ -27,7 +27,7 @@
 
 ## How the folders compare
 
-`client-secret/` and `private-key-jwt/` share one structure: `src/smart.ts` holds launch, PKCE, state, token exchange and ID token verification, `src/app.ts` the routes, `src/fhir.ts` the FHIR calls. They differ only in how the token request authenticates (`exchange` and `clientAssertion` in `src/smart.ts`) and in config. `backend-services/` has no launch: `src/smart.ts` requests and caches a system token. `public/` implements the same launch flow as ten TODOs in `src/steps.ts`, with the answers in `src/reference.ts`.
+`client-secret/` and `private-key-jwt/` share one structure: `src/smart.ts` holds launch, PKCE, state, token exchange and ID token verification, `src/app.ts` the routes, `src/fhir.ts` the FHIR calls. They differ only in how the token request authenticates (`exchange` and `clientAssertion` in `src/smart.ts`) and in config. `backend-services/` has no launch: `src/smart.ts` requests and caches a system token. `public/` implements the same launch flow as ten TODOs in `src/steps.ts`, with a progress checklist in the browser.
 
 ## More
 
