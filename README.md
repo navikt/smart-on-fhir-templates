@@ -19,7 +19,7 @@
    npm start
    ```
 
-   In `public/`, `npm start` shows a checklist of ten TODOs to implement. The answers are on the `solutions` branch.
+   In `public/`, `npm start` shows a checklist of ten TODOs to implement. The answers are on the [`solutions` branch](https://github.com/navikt/smart-on-fhir-templates/tree/solutions/public) of the upstream repo, see [Stuck?](./public/README.md#stuck).
 
 3. Get your own test clinician login from the host. The host registers each app in nav-epj by hand, except the shared hackathon client in `public/`. The folder README lists what to send.
 

@@ -61,34 +61,33 @@ Notes:
 - ✅ means the output has the right shape. It is not a security certification: the checks do not prove randomness, state handling or ID token signature verification. See [Break it](./EXERCISES.md#break-it).
 - Errors you throw are shown on the page. Known secret values of 8 or more characters (codes, verifiers, state, tokens) are redacted. Other text in an error is not guaranteed to be, so keep secrets out of error messages.
 - Progress belongs to the browser that started the launch.
-- Answers are on the `solutions` branch. See [Stuck?](#stuck) before you open it.
+- Worked answers are on the `solutions` branch of the upstream repo. [Stuck?](#stuck) shows how to use them.
 
 ## Stuck?
 
-Three levels. Use these in order, stopping when you can continue.
+Each ❌ step on the checklist has a hint, a short explanation of why the step exists and a link to the SMART spec.
 
-1. **Hint and why.** A ❌ step on the checklist shows a hint, why the step exists (the attack or failure it prevents) and a link to the SMART spec. Read the why aloud to your team.
-2. **Read and compare.** Open [`steps.ts` on `solutions`](https://github.com/navikt/smart-on-fhir-templates/blob/solutions/public/src/steps.ts), find the function named like your ❌ step (for example `pkce()`) and compare it with yours. Paste it only if every helper it calls exists in your `src/`. If one is missing (for example `isSameSecret`), do not port it: use level 3. The solved branch has drifted from this template, so whole-file copies can break.
-3. **Use the solved app.** Run the full solved app in a separate folder and leave your own `public/` untouched. Your repo has no `solutions` branch, so fetch it from the upstream repo. Run this in `public/`:
+To see a working answer, open [`steps.ts` on the `solutions` branch](https://github.com/navikt/smart-on-fhir-templates/blob/solutions/public/src/steps.ts) and find the function for your step, for example `pkce()`. It can call helpers that your `src/` does not have, so compare it with your code instead of pasting it in.
 
-   ```sh
-   git fetch https://github.com/navikt/smart-on-fhir-templates solutions
-   git worktree add -b solved ../../smart-solved FETCH_HEAD
-   cp .env ../../smart-solved/public/.env
-   cd ../../smart-solved/public
-   npm ci
-   ```
+To run the finished app, clone the `solutions` branch into a folder next to your repo. Your own code is not touched. Stop your own app first, since both use port 3100, then run this in `public/`:
 
-   Pick a branch name and folder that do not exist yet if `solved` or `smart-solved` is taken. Stop your own app first, because the launch URL and port 3100 are registered once. Then run `npm start` in `smart-solved/public`. The solved app is a reference that works independently of your code. Some versions of `solutions` do not show the progress checklist, so use [Before you build](#before-you-build) for the discussion prompts.
+```sh
+git clone --branch solutions https://github.com/navikt/smart-on-fhir-templates ../../smart-solved
+cp .env ../../smart-solved/public/.env
+cd ../../smart-solved/public
+npm ci
+npm start
+```
+
+If the finished app shows no checklist, the discussion questions are under [Before you build](#before-you-build).
 
 ## Skip Bronze and pacing
 
-- **Experienced with SMART?** Skip Bronze: set up the solved app as in level 3 and build from there. You still work through the [Before you build](#before-you-build) prompts as a team. The [solutions guide](https://github.com/navikt/smart-on-fhir-templates/blob/solutions/public/SOLUTIONS.md) explains each step.
-- **Not through Bronze before lunch?** Set up the solved app as in level 3 and build after lunch. Nobody checks, so the team decides.
+You can switch to the finished app at any point and build your own idea on top of it. Set it up as in [Stuck?](#stuck) and go through [Before you build](#before-you-build). The [solutions guide](https://github.com/navikt/smart-on-fhir-templates/blob/solutions/public/SOLUTIONS.md) explains each step.
 
 ## Before you build
 
-Talk these through as a team, out loud, after launch (or before, if you skip Bronze). Open your browser's network tab, start a new launch from the EPJ and narrate each redirect to each other. The checklist in this template shows the same list once all ten steps pass.
+Use these questions to check that the team understands the launch. Open the browser's network tab, start a new launch from the EPJ and follow each redirect. The checklist shows the same questions once all ten steps pass.
 
 1. Why does SMART exist, and what problem does it solve for a clinician?
 2. For each of iss, launch, state, code_verifier, aud and code: what does it protect against, and where in the network tab do you see it?
@@ -98,7 +97,7 @@ Talk these through as a team, out loud, after launch (or before, if you skip Bro
 6. Which three client authentication types does SMART define, and which one fits a Norwegian EPJ vendor today?
 7. How does HelseID relate to, and differ from, the authorization server of the EPJ?
 
-The prompts help you explain the flow. They do not make your app certified or secure. When you can answer them, pick a [problem card](./EXERCISES.md#problem-cards) or bring your own idea.
+The questions help you explain the flow. They do not make your app certified or secure. When you can answer them, pick a [problem card](./EXERCISES.md#problem-cards) or bring your own idea.
 
 ## 6. Registration
 
