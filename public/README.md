@@ -55,30 +55,31 @@ Notes:
 
 ## Stuck?
 
-Three levels. Use these in order, stopping when you can continue. They apply when you build the steps yourself from `main`. This branch is the solved reference, so levels 2 and 3 are already done here.
+This branch is the finished app. If you build the steps yourself from `main` and get stuck:
 
-1. **Hint and why.** A ❌ step on the checklist shows a hint, why the step exists (the attack or failure it prevents) and a link to the SMART spec. Read the why aloud to your team.
-2. **Read and compare.** Read the matching function in [src/steps.ts](./src/steps.ts) (for example `pkce()`) and compare it with yours. Paste it into your `main` copy only if every helper it calls exists in your `src/`. If one is missing (for example `isSameSecret`), do not port it: use level 3.
-3. **Use the solved app.** Run this branch in a separate folder and leave your own `public/` untouched. A repo created from the template has no `solutions` branch, so fetch it from the upstream repo. Run this in your `public/`:
+Each ❌ step on the checklist has a hint, a short explanation of why the step exists and a link to the SMART spec.
 
-   ```sh
-   git fetch https://github.com/navikt/smart-on-fhir-templates solutions
-   git worktree add -b solved ../../smart-solved FETCH_HEAD
-   cp .env ../../smart-solved/public/.env
-   cd ../../smart-solved/public
-   npm ci
-   ```
+To see a working answer, read the function for your step in [src/steps.ts](./src/steps.ts), for example `pkce()`. It can call helpers that your `src/` does not have, so compare it with your code instead of pasting it in.
 
-   Pick a branch name and folder that do not exist yet if `solved` or `smart-solved` is taken. Stop your own app first, because the launch URL and port 3100 are registered once. Then run `npm start` in `smart-solved/public`. The solved app is a reference that works independently of your code. Some versions of `solutions` do not show the progress checklist, so use [Before you build](#before-you-build) for the discussion prompts.
+To run this finished app, clone this branch into a folder next to your repo. Your own code is not touched. Stop your own app first, since both use port 3100, then run this in your `public/`:
+
+```sh
+git clone --branch solutions https://github.com/navikt/smart-on-fhir-templates ../../smart-solved
+cp .env ../../smart-solved/public/.env
+cd ../../smart-solved/public
+npm ci
+npm start
+```
+
+If the finished app shows no checklist, the discussion questions are under [Before you build](#before-you-build).
 
 ## Skip Bronze and pacing
 
-- **Experienced with SMART?** Skip Bronze: run this branch as in level 3 and build from there. You still work through the [Before you build](#before-you-build) prompts as a team. [SOLUTIONS.md](./SOLUTIONS.md) explains each step.
-- **Not through Bronze before lunch?** Run this branch as in level 3 and build after lunch. Nobody checks, so the team decides.
+You can switch to this finished app at any point and build your own idea on top of it. Set it up as in [Stuck?](#stuck) and go through [Before you build](#before-you-build). [SOLUTIONS.md](./SOLUTIONS.md) explains each step.
 
 ## Before you build
 
-Talk these through as a team, out loud, after launch (or before, if you skip Bronze). Open your browser's network tab, start a new launch from the EPJ and narrate each redirect to each other.
+Use these questions to check that the team understands the launch. Open the browser's network tab, start a new launch from the EPJ and follow each redirect. The checklist shows the same questions once all ten steps pass.
 
 1. Why does SMART exist, and what problem does it solve for a clinician?
 2. For each of iss, launch, state, code_verifier, aud and code: what does it protect against, and where in the network tab do you see it?
@@ -88,7 +89,7 @@ Talk these through as a team, out loud, after launch (or before, if you skip Bro
 6. Which three client authentication types does SMART define, and which one fits a Norwegian EPJ vendor today?
 7. How does HelseID relate to, and differ from, the authorization server of the EPJ?
 
-The prompts help you explain the flow. They do not make your app certified or secure. When you can answer them, pick a [problem card](./EXERCISES.md#problem-cards) or bring your own idea.
+The questions help you explain the flow. They do not make your app certified or secure. When you can answer them, pick a [problem card](./EXERCISES.md#problem-cards) or bring your own idea.
 
 ## 6. Registration
 

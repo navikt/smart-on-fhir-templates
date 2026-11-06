@@ -19,7 +19,7 @@
    npm start
    ```
 
-   In `public/`, `npm start` shows a checklist of the ten launch steps. They are TODOs on `main` and done on this branch.
+   In `public/`, `npm start` shows a checklist of the ten launch steps. They are TODOs on `main` and done on this branch, with a walkthrough in [public/SOLUTIONS.md](./public/SOLUTIONS.md).
 
 3. Get your own test clinician login from the host. The host registers each app in nav-epj by hand, except the shared hackathon client in `public/`. The folder README lists what to send.
 

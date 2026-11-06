@@ -37,7 +37,7 @@ Show the patient's name, age and the ongoing consultation. The ten steps in `src
 
 The page checks the shape of each step's output, not its security. Use [Break it](#break-it) to test the rest.
 
-When all ten steps pass, the checklist shows "Before you build" prompts. Answer them out loud as a team: open the browser's network tab and narrate each redirect to each other. Keep tokens, secrets and keys on the server.
+When all ten steps pass, the checklist shows the [Before you build](./README.md#before-you-build) questions. Open the browser's network tab and follow each redirect while you answer them. Keep tokens, secrets and keys on the server.
 
 ## Scopes
 
@@ -182,7 +182,11 @@ The server assigns the ID, so posting twice stores two records. Disable the butt
 
 ## Problem cards
 
-Each card is a starting hypothesis about a clinical need, not a requirement or a clinical recommendation. Check the idea with the other team members before you build it. Use the patient at your team's practice (the host tells you which one). The data is synthetic.
+Each card is a starting hypothesis about a clinical need, not a requirement or a clinical recommendation. Check the idea with the other team members before you build it. The data is synthetic.
+
+Every patient below belongs to one card only. Before you build, ask the host to reserve one patient from your card for your team. Several teams can pick the same card, and each gets a different patient. Not every card has a patient at every organisation, so choose the reserved patient's organisation when you log in. Everyone on the team logs in as their own test clinician, and several of you can have a consultation open with the same patient at once.
+
+The reservation keeps teams out of each other's way, but the EPJ does not enforce it: everyone at an organisation can see and change the records of all its patients. If every patient on a card is taken, pick another card or bring your own idea.
 
 Request `patient/Observation.s` to read measurements, plus `patient/Observation.c` or `patient/DocumentReference.c` for the writes in [Write-back shapes](#write-back-shapes). Patients not marked as ongoing need a consultation started in the EPJ before you can launch, and the app only gets context from that launch. The listed codes each have at least three readings per patient. Write an Observation with the same code and UCUM unit as the seeded readings, and compare values in a trend only when the units match. Use only the codes listed here: do not invent codes for risk, scores or conclusions.
 
@@ -195,7 +199,6 @@ A GP wants to see whether kidney function is falling before renewing a prescript
 | Skogtun | Sigrun Moen | 09894810030 | 62238-1 eGFR (`mL/min/{1.73_m2}`), 14682-9 creatinine (`umol/L`) |
 | Havnegata | Per Tveit | 12924510194 | 62238-1 (`mL/min/{1.73_m2}`), 14682-9 (`umol/L`) |
 | Bjerkely | Gunnar Foss | 23895710156 | 62238-1 (`mL/min/{1.73_m2}`) |
-| Solbakken | Helge Bratt (ongoing) | 16834910156 | 62238-1 (`mL/min/{1.73_m2}`), 14682-9 (`umol/L`) |
 
 Write: a journal note that cites the values you read, or a new eGFR or creatinine Observation.
 
@@ -209,7 +212,7 @@ A clinician follows PHQ-9 or GAD-7 scores between visits. Open question: which c
 | Havnegata | Hilde Nes | 65866910027 | 44261-6 PHQ-9 (`{score}`) |
 | Bjerkely | Linn Holm | 66820350082 | 44261-6 (`{score}`) |
 
-Solbakken has no PHQ-9 or GAD-7 readings. Teams there pick another card. Write: a journal note, or a new score as an Observation with the seeded code.
+Write: a journal note, or a new score as an Observation with the seeded code.
 
 ### Consultation prep
 
@@ -219,10 +222,9 @@ Before a consultation the clinician wants a one-screen overview of recent measur
 |---|---|---|---|
 | Skogtun | Bjarne Berge (ongoing) | 20856210112 | 8480-6 and 8462-4 blood pressure (`mm[Hg]`), 29463-7 weight (`kg`) |
 | Havnegata | Else Strand (ongoing) | 04845310039 | 4548-4 HbA1c (`%`), 62238-1 eGFR (`mL/min/{1.73_m2}`) |
-| Bjerkely | Gunnar Foss | 23895710156 | 8480-6 (`mm[Hg]`), 4548-4 (`%`), 29463-7 (`kg`) |
 | Solbakken | Helge Bratt (ongoing) | 16834910156 | 8480-6, 8462-4 (`mm[Hg]`) |
 
-Gunnar Foss has only a planned consultation, so start one first. Write: a journal note that summarises what you showed.
+Write: a journal note that summarises what you showed.
 
 ## Keep a working launch
 
