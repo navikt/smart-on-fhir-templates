@@ -183,18 +183,18 @@ The server assigns the ID, so posting twice stores two records. Disable the butt
 
 Each card is a starting hypothesis about a clinical need, not a requirement or a clinical recommendation. Check the idea with the other team members before you build it. Use the patient at your team's practice (the host tells you which one). The data is synthetic.
 
-Request `patient/Observation.s` to read measurements, plus `patient/Observation.c` or `patient/DocumentReference.c` for the writes in [Write-back shapes](#write-back-shapes). Patients not marked as ongoing need a consultation started in the EPJ before you can launch, and the app only gets context from that launch. The listed codes each have at least three readings per patient.
+Request `patient/Observation.s` to read measurements, plus `patient/Observation.c` or `patient/DocumentReference.c` for the writes in [Write-back shapes](#write-back-shapes). Patients not marked as ongoing need a consultation started in the EPJ before you can launch, and the app only gets context from that launch. The listed codes each have at least three readings per patient. Write an Observation with the same code and UCUM unit as the seeded readings, and compare values in a trend only when the units match. Use only the codes listed here: do not invent codes for risk, scores or conclusions.
 
 ### Kidney function trend
 
 A GP wants to see whether kidney function is falling before renewing a prescription. Open question: what change over what time span is worth a warning, and who decides that?
 
-| Organisation | Patient | Personident | LOINC codes |
+| Organisation | Patient | Personident | LOINC codes (UCUM unit) |
 |---|---|---|---|
-| Skogtun | Sigrun Moen | 09894810030 | 62238-1 (eGFR), 14682-9 (creatinine) |
-| Havnegata | Per Tveit | 12924510194 | 62238-1, 14682-9 |
-| Bjerkely | Gunnar Foss | 23895710156 | 62238-1 |
-| Solbakken | Helge Bratt (ongoing) | 16834910156 | 62238-1, 14682-9 |
+| Skogtun | Sigrun Moen | 09894810030 | 62238-1 eGFR (`mL/min/{1.73_m2}`), 14682-9 creatinine (`umol/L`) |
+| Havnegata | Per Tveit | 12924510194 | 62238-1 (`mL/min/{1.73_m2}`), 14682-9 (`umol/L`) |
+| Bjerkely | Gunnar Foss | 23895710156 | 62238-1 (`mL/min/{1.73_m2}`) |
+| Solbakken | Helge Bratt (ongoing) | 16834910156 | 62238-1 (`mL/min/{1.73_m2}`), 14682-9 (`umol/L`) |
 
 Write: a journal note that cites the values you read, or a new eGFR or creatinine Observation.
 
@@ -202,11 +202,11 @@ Write: a journal note that cites the values you read, or a new eGFR or creatinin
 
 A clinician follows PHQ-9 or GAD-7 scores between visits. Open question: which change between two scores should prompt a conversation, and how does the app avoid sounding like a diagnosis?
 
-| Organisation | Patient | Personident | LOINC codes |
+| Organisation | Patient | Personident | LOINC codes (UCUM unit) |
 |---|---|---|---|
-| Skogtun | Olav Haug | 70837710381 | 69737-5 (GAD-7) |
-| Havnegata | Hilde Nes | 65866910027 | 44261-6 (PHQ-9) |
-| Bjerkely | Linn Holm | 66820350082 | 44261-6 |
+| Skogtun | Olav Haug | 70837710381 | 69737-5 GAD-7 (`{score}`) |
+| Havnegata | Hilde Nes | 65866910027 | 44261-6 PHQ-9 (`{score}`) |
+| Bjerkely | Linn Holm | 66820350082 | 44261-6 (`{score}`) |
 
 Solbakken has no PHQ-9 or GAD-7 readings. Teams there pick another card. Write: a journal note, or a new score as an Observation with the seeded code.
 
@@ -214,12 +214,12 @@ Solbakken has no PHQ-9 or GAD-7 readings. Teams there pick another card. Write: 
 
 Before a consultation the clinician wants a one-screen overview of recent measurements. Open question: which three or four values matter for this patient, and how old can a value be before the overview should hide it?
 
-| Organisation | Patient | Personident | LOINC codes |
+| Organisation | Patient | Personident | LOINC codes (UCUM unit) |
 |---|---|---|---|
-| Skogtun | Bjarne Berge (ongoing) | 20856210112 | 8480-6, 8462-4 (blood pressure), 29463-7 (weight) |
-| Havnegata | Else Strand (ongoing) | 04845310039 | 4548-4 (HbA1c), 62238-1 (eGFR) |
-| Bjerkely | Gunnar Foss | 23895710156 | 8480-6, 4548-4, 29463-7 |
-| Solbakken | Helge Bratt (ongoing) | 16834910156 | 8480-6, 8462-4 |
+| Skogtun | Bjarne Berge (ongoing) | 20856210112 | 8480-6 and 8462-4 blood pressure (`mm[Hg]`), 29463-7 weight (`kg`) |
+| Havnegata | Else Strand (ongoing) | 04845310039 | 4548-4 HbA1c (`%`), 62238-1 eGFR (`mL/min/{1.73_m2}`) |
+| Bjerkely | Gunnar Foss | 23895710156 | 8480-6 (`mm[Hg]`), 4548-4 (`%`), 29463-7 (`kg`) |
+| Solbakken | Helge Bratt (ongoing) | 16834910156 | 8480-6, 8462-4 (`mm[Hg]`) |
 
 Gunnar Foss has only a planned consultation, so start one first. Write: a journal note that summarises what you showed.
 

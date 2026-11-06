@@ -10,11 +10,6 @@ const PROBLEM_CARDS = `${REPO}/main/public/EXERCISES.md#problem-cards`
 const STUCK = `${REPO}/main/public/README.md#stuck`
 const SOLVED_STEPS = `${REPO}/solutions/public/src/steps.ts`
 const SOLUTIONS_GUIDE = `${REPO}/solutions/public/SOLUTIONS.md`
-const RESCUE_COMMANDS = [
-    'cp src/steps.ts steps.mine.txt',
-    'git fetch https://github.com/navikt/smart-on-fhir-templates solutions',
-    'git checkout FETCH_HEAD -- src/steps.ts',
-].join('\n')
 
 const MAX_ATTEMPTS = 500
 const ATTEMPT_TTL_MS = 1_800_000
@@ -337,8 +332,7 @@ function renderWhy(definition: StepDefinition): string {
 }
 
 function renderRescue(): string {
-    return `<p>Rescue: see this step in the <a href="${SOLVED_STEPS}">solved steps.ts</a>, or replace your whole src/steps.ts (run in this folder, your copy is kept in steps.mine.txt). More options in <a href="${STUCK}">Stuck?</a></p>
-        <pre>${escapeHtml(RESCUE_COMMANDS)}</pre>`
+    return `<p>Rescue: read and compare this step in the <a href="${SOLVED_STEPS}">solved steps.ts</a>. More options in <a href="${STUCK}">Stuck?</a></p>`
 }
 
 function renderItem(item: ChecklistItem, definition: StepDefinition): string {

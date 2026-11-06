@@ -68,35 +68,37 @@ Notes:
 Three levels, in order. Each one gives away more of the learning, so stop at the first that unblocks your team.
 
 1. **Hint and why.** A ❌ step on the checklist shows a hint, why the step exists (the attack or failure it prevents) and a link to the SMART spec. Read the why aloud to your team.
-2. **Copy one step.** Open [`steps.ts` on `solutions`](https://github.com/navikt/smart-on-fhir-templates/blob/solutions/public/src/steps.ts), find the function named like your ❌ step (for example `pkce()`) and compare it with yours before you paste it into your own `src/steps.ts`.
-3. **Use the solved app.** Your repo has no `solutions` branch, so fetch it from the upstream repo. Run these in this folder (`public/`). Pick one:
-
-   Replace only `src/steps.ts`. Your copy is kept in `steps.mine.txt`:
-
-   ```sh
-   cp src/steps.ts steps.mine.txt
-   git fetch https://github.com/navikt/smart-on-fhir-templates solutions
-   git checkout FETCH_HEAD -- src/steps.ts
-   ```
-
-   Undo it with `cp steps.mine.txt src/steps.ts`.
-
-   Or run the whole solved app next to yours, including the write-back pages, and leave your own `public/` untouched:
+2. **Read and compare.** Open [`steps.ts` on `solutions`](https://github.com/navikt/smart-on-fhir-templates/blob/solutions/public/src/steps.ts), find the function named like your ❌ step (for example `pkce()`) and compare it with yours. Paste it only if every helper it calls exists in your `src/`. If one is missing (for example `isSameSecret`), do not port it: use level 3. The solved branch has drifted from this template, so whole-file copies can break.
+3. **Use the solved app.** Run the full solved app in a separate folder and leave your own `public/` untouched. Your repo has no `solutions` branch, so fetch it from the upstream repo. Run this in `public/`:
 
    ```sh
    git fetch https://github.com/navikt/smart-on-fhir-templates solutions
-   git worktree add ../../smart-solved FETCH_HEAD
+   git worktree add -b solved ../../smart-solved FETCH_HEAD
    cp .env ../../smart-solved/public/.env
    cd ../../smart-solved/public
    npm ci
    ```
 
-   Stop your own app first. The launch URL and port 3100 are registered once, so only one app can run at a time. Then run `npm start` in `smart-solved/public`.
+   Pick a branch name and folder that do not exist yet if `solved` or `smart-solved` is taken. Stop your own app first, because the launch URL and port 3100 are registered once. Then run `npm start` in `smart-solved/public`. The solved app is a reference that works independently of your code. It has no progress checklist, so use [Before you build](#before-you-build) for the discussion prompts.
 
 ## Skip Bronze and pacing
 
-- **Experienced with SMART?** Skip Bronze: set up the solved app as in level 3 and build from there. You still work through the discussion prompts. The checklist shows them as "Before you build" after a launch with ten ✅, and the [solutions guide](https://github.com/navikt/smart-on-fhir-templates/blob/solutions/public/SOLUTIONS.md) explains each step.
+- **Experienced with SMART?** Skip Bronze: set up the solved app as in level 3 and build from there. You still work through the [Before you build](#before-you-build) prompts as a team. The [solutions guide](https://github.com/navikt/smart-on-fhir-templates/blob/solutions/public/SOLUTIONS.md) explains each step.
 - **Not through Bronze before lunch?** Set up the solved app as in level 3 and build after lunch. Nobody checks, so the team decides.
+
+## Before you build
+
+Talk these through as a team, out loud, after launch (or before, if you skip Bronze). Open your browser's network tab, start a new launch from the EPJ and narrate each redirect to each other. The checklist in this template shows the same list once all ten steps pass.
+
+1. Why does SMART exist, and what problem does it solve for a clinician?
+2. For each of iss, launch, state, code_verifier, aud and code: what does it protect against, and where in the network tab do you see it?
+3. Which endpoints in .well-known/smart-configuration matter, and why do you only trust them on the issuer origin?
+4. Compare the scopes you requested with scope in the token response. What was granted, and what would be refused?
+5. Why do access tokens stay on the server and not in the browser?
+6. Which three client authentication types does SMART define, and which one fits a Norwegian EPJ vendor today?
+7. How does HelseID relate to, and differ from, the authorization server of the EPJ?
+
+The prompts help you explain the flow. They do not make your app certified or secure. When you can answer them, pick a [problem card](./EXERCISES.md#problem-cards) or bring your own idea.
 
 ## 6. Registration
 

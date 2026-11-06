@@ -67,12 +67,11 @@ test('Progress: unfinished steps return 501 with the first TODO failing and the 
     assert.match(itemFor(response.body, 1), /Why: iss names the FHIR server/)
     assert.match(itemFor(response.body, 1), /href="[^"]*app-launch\.html#step-2-launch-ehr">SMART spec/)
     assert.match(itemFor(response.body, 1), /public\/src\/steps\.ts">solved steps\.ts/)
-    assert.match(
-        itemFor(response.body, 1),
-        /git fetch https:\/\/github\.com\/navikt\/smart-on-fhir-templates solutions\ngit checkout FETCH_HEAD -- src\/steps\.ts/,
-    )
+    assert.match(itemFor(response.body, 1), /read and compare this step/)
+    assert.match(itemFor(response.body, 1), /README\.md#stuck">Stuck\?/)
+    assert.doesNotMatch(response.body, /git (fetch|checkout)/)
     assert.doesNotMatch(response.body, /Before you build/)
-    assert.doesNotMatch(itemFor(response.body, 2), /Why:|git fetch/)
+    assert.doesNotMatch(itemFor(response.body, 2), /Why:|Rescue:/)
 })
 
 test('Progress: a wrong PKCE challenge fails step 3 after steps 1 and 2 pass', async (t) => {
@@ -274,7 +273,7 @@ test('Progress: shape-correct steps reach the chart with every step passing and 
     assert.equal(count(chart.body, FAILED) + count(chart.body, PENDING), 0)
     assert.match(chart.body, /Progress: 10 of 10 steps OK/)
     assert.match(itemFor(chart.body, 3), /<details><summary>Why this step<\/summary>/)
-    assert.doesNotMatch(chart.body, /git fetch/)
+    assert.doesNotMatch(chart.body, /Rescue:/)
     assert.match(chart.body, /<h2>Before you build<\/h2>/)
     assert.match(chart.body, /network tab/)
     assert.match(chart.body, /public\/EXERCISES\.md#problem-cards/)
