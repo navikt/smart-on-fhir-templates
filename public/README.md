@@ -79,7 +79,7 @@ Three levels. Use these in order, stopping when you can continue.
    npm ci
    ```
 
-   Pick a branch name and folder that do not exist yet if `solved` or `smart-solved` is taken. Stop your own app first, because the launch URL and port 3100 are registered once. Then run `npm start` in `smart-solved/public`. The solved app is a reference that works independently of your code. It has no progress checklist, so use [Before you build](#before-you-build) for the discussion prompts.
+   Pick a branch name and folder that do not exist yet if `solved` or `smart-solved` is taken. Stop your own app first, because the launch URL and port 3100 are registered once. Then run `npm start` in `smart-solved/public`. The solved app is a reference that works independently of your code. Some versions of `solutions` do not show the progress checklist, so use [Before you build](#before-you-build) for the discussion prompts.
 
 ## Skip Bronze and pacing
 
