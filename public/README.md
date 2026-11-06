@@ -65,7 +65,7 @@ Notes:
 
 ## Stuck?
 
-Three levels, in order. Each one gives away more of the learning, so stop at the first that unblocks your team.
+Three levels. Use these in order, stopping when you can continue.
 
 1. **Hint and why.** A ❌ step on the checklist shows a hint, why the step exists (the attack or failure it prevents) and a link to the SMART spec. Read the why aloud to your team.
 2. **Read and compare.** Open [`steps.ts` on `solutions`](https://github.com/navikt/smart-on-fhir-templates/blob/solutions/public/src/steps.ts), find the function named like your ❌ step (for example `pkce()`) and compare it with yours. Paste it only if every helper it calls exists in your `src/`. If one is missing (for example `isSameSecret`), do not port it: use level 3. The solved branch has drifted from this template, so whole-file copies can break.
