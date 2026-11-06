@@ -2,7 +2,7 @@
 
 | Symptom | Fix |
 |---|---|
-| `TODO n` / HTTP 501 (`public/` only) | Implement that step in `src/steps.ts`, or compare with the finished `client-secret/src/smart.ts` |
+| `TODO n` / HTTP 501 (`public/` only) | Read the step's why on the checklist, then follow [Stuck?](./public/README.md#stuck), or compare with the finished `client-secret/src/smart.ts` |
 | `Configuration problem in .env` | Fix the listed variables, see the Configure step in your folder's README |
 | `invalid_client` or unknown client | `public/`: `CLIENT_ID` must be `hackathon-public`. Other folders: the host may not have registered your client yet, ask the host to confirm |
 | `Launch token was issued for another organisation.` | You switched organisation in another tab, or someone else uses your login. Log in with your own clinician and relaunch |
