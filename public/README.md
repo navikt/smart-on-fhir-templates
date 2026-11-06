@@ -61,7 +61,42 @@ Notes:
 - ✅ means the output has the right shape. It is not a security certification: the checks do not prove randomness, state handling or ID token signature verification. See [Break it](./EXERCISES.md#break-it).
 - Errors you throw are shown on the page. Known secret values of 8 or more characters (codes, verifiers, state, tokens) are redacted. Other text in an error is not guaranteed to be, so keep secrets out of error messages.
 - Progress belongs to the browser that started the launch.
-- Answers are on the `solutions` branch.
+- Answers are on the `solutions` branch. See [Stuck?](#stuck) before you open it.
+
+## Stuck?
+
+Three levels, in order. Each one gives away more of the learning, so stop at the first that unblocks your team.
+
+1. **Hint and why.** A ❌ step on the checklist shows a hint, why the step exists (the attack or failure it prevents) and a link to the SMART spec. Read the why aloud to your team.
+2. **Copy one step.** Open [`steps.ts` on `solutions`](https://github.com/navikt/smart-on-fhir-templates/blob/solutions/public/src/steps.ts), find the function named like your ❌ step (for example `pkce()`) and compare it with yours before you paste it into your own `src/steps.ts`.
+3. **Use the solved app.** Your repo has no `solutions` branch, so fetch it from the upstream repo. Run these in this folder (`public/`). Pick one:
+
+   Replace only `src/steps.ts`. Your copy is kept in `steps.mine.txt`:
+
+   ```sh
+   cp src/steps.ts steps.mine.txt
+   git fetch https://github.com/navikt/smart-on-fhir-templates solutions
+   git checkout FETCH_HEAD -- src/steps.ts
+   ```
+
+   Undo it with `cp steps.mine.txt src/steps.ts`.
+
+   Or run the whole solved app next to yours, including the write-back pages, and leave your own `public/` untouched:
+
+   ```sh
+   git fetch https://github.com/navikt/smart-on-fhir-templates solutions
+   git worktree add ../../smart-solved FETCH_HEAD
+   cp .env ../../smart-solved/public/.env
+   cd ../../smart-solved/public
+   npm ci
+   ```
+
+   Stop your own app first. The launch URL and port 3100 are registered once, so only one app can run at a time. Then run `npm start` in `smart-solved/public`.
+
+## Skip Bronze and pacing
+
+- **Experienced with SMART?** Skip Bronze: set up the solved app as in level 3 and build from there. You still work through the discussion prompts. The checklist shows them as "Before you build" after a launch with ten ✅, and the [solutions guide](https://github.com/navikt/smart-on-fhir-templates/blob/solutions/public/SOLUTIONS.md) explains each step.
+- **Not through Bronze before lunch?** Set up the solved app as in level 3 and build after lunch. Nobody checks, so the team decides.
 
 ## 6. Registration
 
