@@ -35,13 +35,13 @@ SCOPES=openid fhirUser launch patient/Patient.r patient/Encounter.s
 npm start
 ```
 
-`npm start` restarts the app when you save a file. A restart clears in-memory sessions and progress.
+`npm start` reads the `.env` file from step 2, so create it first. It restarts the app when you save a file or `.env`. A restart clears in-memory sessions and progress.
 
 ## 4. Launch
 
 Log in at https://epj.ekstern.dev.nav.no with your own test clinician, open a patient marked "Pågår nå" and pick **Hackathon starter** in the app picker.
 
-The page lists ten steps grouped by the [SMART App Launch](https://build.fhir.org/ig/HL7/smart-app-launch/en/app-launch.html) phases. Each step shows ✅, ❌ or ⏳ with a hint and the next action. The first launch fails at TODO 1.
+The page lists ten steps grouped by the [SMART App Launch](https://build.fhir.org/ig/HL7/smart-app-launch/en/app-launch.html) phases. Each step shows ✅, ❌ or ⬜ with a hint and the next action. The first launch fails at TODO 1.
 
 ## 5. Build your own
 
@@ -59,7 +59,7 @@ pkce() {
 Notes:
 
 - ✅ means the output has the right shape. It is not a security certification: the checks do not prove randomness, state handling or ID token signature verification. See [Break it](./EXERCISES.md#break-it).
-- Errors you throw are shown on the page. Known codes, verifiers and tokens are redacted, other text is not, so keep secrets out of error messages.
+- Errors you throw are shown on the page. Known secret values of 8 or more characters (codes, verifiers, state, tokens) are redacted. Other text in an error is not guaranteed to be, so keep secrets out of error messages.
 - Progress belongs to the browser that started the launch.
 - Answers are on the `solutions` branch.
 
