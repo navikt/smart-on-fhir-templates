@@ -1,6 +1,6 @@
 # Solutions
 
-This branch has working Bronze, Silver and Gold solutions on top of the `public/` starter. The code carries comments that explain why each check is there. Run it with `npm start` (no `--reference`).
+This branch has working Bronze, Silver and Gold solutions on top of the `public/` starter. The code carries comments that explain why each check is there. Run it with `npm start`.
 
 Everything in this file marked **automated** runs in `npm test` against the in-process fixture in [test/fixture.ts](./test/fixture.ts), not against the real host. Anything marked **manual** needs the EPJ and has not been run here.
 
@@ -72,7 +72,7 @@ SCOPES=openid fhirUser launch patient/Patient.r patient/Encounter.s
 
 ### Confidential client comparison
 
-`public/` sends no secret: PKCE is the proof. A confidential client adds one header to the same token request, `Authorization: Basic ...`. Compare `exchange` in [../client-secret/src/smart.ts](../client-secret/src/smart.ts) with `tokenRequest` in [src/reference.ts](./src/reference.ts).
+`public/` sends no secret: PKCE is the proof. A confidential client adds one header to the same token request, `Authorization: Basic ...`. Compare `exchange` in [../client-secret/src/smart.ts](../client-secret/src/smart.ts) with `exchange` in [src/steps.ts](./src/steps.ts).
 
 The credentials are form-URL-encoded first, then joined and base64-encoded:
 
@@ -84,11 +84,7 @@ Authorization: Basic base64(id + ":" + secret)
 
 With the secret `p&ss w/+rd=é` the header carries `base64("<client_id>:p%26ss+w%2F%2Brd%3D%C3%A9")`. Plain base64 of the raw secret works for simple secrets and breaks on characters like `&`, `+` and spaces. A wrong secret gives `401 invalid_client`.
 
-**Automated:** `Confidential client comparison` in [test/auth-errors.test.ts](./test/auth-errors.test.ts) builds that header from the real token request, checks the encoding and checks that a wrong secret gets 401.
-
-```sh
-node --import tsx --test --test-name-pattern="Confidential client comparison" test/auth-errors.test.ts
-```
+**Automated:** `public/` checks that its token request sends no client credentials (`reject code replay, wrong PKCE and a changed redirect URI` in [test/auth-errors.test.ts](./test/auth-errors.test.ts)).
 
 ## Gold
 
@@ -123,11 +119,11 @@ node --import tsx --test test/write-forms.test.ts
 
 These stay in the finished siblings. Do not copy them into `public/`.
 
-- Compare `clientAssertion` in [../private-key-jwt/src/smart.ts](../private-key-jwt/src/smart.ts) with `tokenRequest` in `public/`. The assertion is signed with your private key, has `iss` and `sub` set to the client ID, `aud` set to the token endpoint, a short `exp` and a fresh `jti`.
-- To run it against the host: `npm ci`, `cp .env.example .env`, `npm run generate-key`, send the printed public JWK Set to the host, wait for the go-ahead, then `npm start`. See [../private-key-jwt/README.md](../private-key-jwt/README.md).
+- Compare `clientAssertion` in [../private-key-jwt/src/smart.ts](../private-key-jwt/src/smart.ts) with `exchange` in `public/`. The assertion is signed with your private key, has `iss` and `sub` set to the client ID, `aud` set to the token endpoint, a short `exp` and a fresh `jti`.
+- To run it against the host, follow [../private-key-jwt/README.md](../private-key-jwt/README.md): generate a key there, send the public JWK Set to the host, wait for the go-ahead, then start that app.
 - Backend Services is [../backend-services/](../backend-services/), registered separately and using `system/Patient.rs`. See its README. Its [smoke test](../backend-services/test/smoke.test.ts) runs the token request and a search against a mock server.
 
-**Automated:** the `Asymmetric client authentication` test in `test/auth-errors.test.ts` shows that each token request carries a fresh signed assertion, and the sibling smoke tests run their own flows. **Manual:** a launch with your own registered key.
+**Automated:** the sibling smoke tests run their own flows. **Manual:** a launch with your own registered key.
 
 ## Break it
 

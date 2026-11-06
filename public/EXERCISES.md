@@ -7,18 +7,34 @@ Bronze and Silver build on this `public/` app. Gold ideas point at the finished 
 
 ## Bronze: it launched
 
-Show the patient's name, age and the ongoing consultation. Follow the ten steps in `src/steps.ts`:
+Show the patient's name, age and the ongoing consultation. The ten steps in `src/steps.ts` follow the [SMART App Launch](https://build.fhir.org/ig/HL7/smart-app-launch/en/app-launch.html) phases:
+
+[Step 2: launch from the EHR](https://build.fhir.org/ig/HL7/smart-app-launch/en/app-launch.html#step-2-launch-ehr)
 
 1. Receive `iss` and `launch`, and check the trusted FHIR issuer.
+
+[Step 3: discovery](https://build.fhir.org/ig/HL7/smart-app-launch/en/app-launch.html#step-3-discovery)
+
 2. Discover the authorization and token endpoints.
+
+[Step 4: authorization code](https://build.fhir.org/ig/HL7/smart-app-launch/en/app-launch.html#step-4-authorization-code)
+
 3. Generate the PKCE verifier and challenge.
 4. Store state and the launch transaction on the server.
 5. Redirect to authorization with your scopes.
 6. Check state when the callback returns.
+
+[Step 5: access token](https://build.fhir.org/ig/HL7/smart-app-launch/en/app-launch.html#step-5-access-token)
+
 7. Exchange the code server-side with your registered client authentication.
 8. Verify the ID token before reading its claims.
 9. Read patient and encounter from the token response, and the clinician from the `fhirUser` claim.
+
+[Step 6: FHIR API](https://build.fhir.org/ig/HL7/smart-app-launch/en/app-launch.html#step-6-fhir-api)
+
 10. Fetch the FHIR resources and render the page.
+
+The page checks the shape of each step's output, not its security. Use [Break it](#break-it) to test the rest.
 
 Then walk a teammate through the redirects in the browser's network tab. Keep tokens, secrets and keys on the server.
 

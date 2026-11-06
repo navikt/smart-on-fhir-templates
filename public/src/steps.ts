@@ -17,23 +17,7 @@ import {
     referenceId,
     searchPath,
 } from './http.ts'
-import type * as reference from './reference.ts'
-import { tokenRequest } from './reference.ts'
-import { DiscoverySchema, TRANSACTION_TTL_MS } from './types.ts'
-
-export type Steps = Pick<
-    typeof reference,
-    | 'readLaunch'
-    | 'discover'
-    | 'pkce'
-    | 'newTransaction'
-    | 'authorizationUrl'
-    | 'validateCallback'
-    | 'exchange'
-    | 'verifyIdentity'
-    | 'launchContext'
-    | 'loadChart'
->
+import { DiscoverySchema, TokenSchema, TRANSACTION_TTL_MS, type Steps } from './types.ts'
 
 const ID_TOKEN_CLOCK_TOLERANCE_SECONDS = 5
 
@@ -169,18 +153,19 @@ export const steps: Steps = {
 
     // 7. The code is redeemed server-side so the tokens never reach the browser. code_verifier proves we are
     // the client that started this flow, and redirect_uri must repeat the value from the authorization request.
-    // tokenRequest adds client_id and this variant's client authentication (none for a public client).
+    // This is a public client: client_id goes in the body and there is no secret or assertion.
     async exchange(config, transaction, code) {
-        return tokenRequest(
-            config,
-            transaction.discovery,
-            new URLSearchParams({
+        return json(transaction.discovery.token_endpoint, TokenSchema, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({
                 grant_type: 'authorization_code',
                 code,
                 code_verifier: transaction.verifier,
                 redirect_uri: config.redirectUri,
+                client_id: config.clientId,
             }),
-        )
+        })
     },
 
     // 8. jwtVerify checks the signature against the issuer's keys before any claim is trusted. issuer and

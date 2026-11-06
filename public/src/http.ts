@@ -111,7 +111,23 @@ export async function request(url: string, init: RequestInit = {}): Promise<Resp
 export async function json<T>(url: string, schema: z.ZodType<T>, init?: RequestInit): Promise<T> {
     const response = await request(url, init)
 
-    return schema.parse(await response.json())
+    let body: unknown
+
+    try {
+        body = await response.json()
+    } catch {
+        throw new AppError(502, 'Upstream returned a body that is not valid JSON.')
+    }
+
+    const result = schema.safeParse(body)
+
+    if (!result.success) {
+        const fields = [...new Set(result.error.issues.map((issue) => issue.path.join('.') || 'body'))]
+
+        throw new AppError(502, `Upstream response has an unexpected shape (check: ${fields.slice(0, 8).join(', ')}).`)
+    }
+
+    return result.data
 }
 
 export function bundle<T>(resource: z.ZodType<T>): z.ZodType<T[]> {

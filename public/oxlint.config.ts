@@ -20,7 +20,7 @@ export default defineConfig({
     },
     overrides: [
         {
-            files: ['src/main.ts', 'src/generate-key.ts'],
+            files: ['src/main.ts'],
             rules: { 'no-console': 'off' },
         },
         {

@@ -4,8 +4,9 @@ import { test, type TestContext } from 'node:test'
 
 import { buildApp } from '../src/app.ts'
 
-import { signIn, type LaunchResponse } from './browser.ts'
+import { signIn } from './browser.ts'
 import { fixture, UPSTREAM_DETAIL, type Fixture } from './fixture.ts'
+import type { InjectResponse } from './launch-helpers.ts'
 
 const WRITE_SCOPES = 'patient/Observation.cr patient/DocumentReference.cr'
 const TRUSTED_ORIGIN = 'http://localhost:3100'
@@ -50,7 +51,7 @@ async function post(
     path: string,
     payload: string,
     { origin = TRUSTED_ORIGIN, contentType = FORM, ...options }: PostOptions = {},
-): Promise<LaunchResponse> {
+): Promise<InjectResponse> {
     return app.inject({
         method: 'POST',
         url: path,

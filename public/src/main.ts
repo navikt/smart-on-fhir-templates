@@ -23,6 +23,6 @@ function loadConfig(): Config {
 }
 
 const config = loadConfig()
-const app = await buildApp(config, process.argv.includes('--reference'))
+const app = await buildApp(config)
 
 await app.listen({ port: config.port, host: '127.0.0.1' })

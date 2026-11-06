@@ -1,19 +1,11 @@
 import Fastify, { type FastifyReply } from 'fastify'
-import { errors, exportJWK, generateKeyPair, jwtVerify, SignJWT, type JWTPayload } from 'jose'
+import { exportJWK, generateKeyPair, SignJWT, type JWTPayload } from 'jose'
 import { createHash, randomUUID } from 'node:crypto'
-import { mkdtemp, rm, writeFile } from 'node:fs/promises'
-import { tmpdir } from 'node:os'
-import { join } from 'node:path'
 import { z } from 'zod'
 
 import { splitScopes, type Config } from '../src/config.ts'
 import type { Encounter, Patient } from '../src/http.ts'
 import type { Context, Discovery, Tokens } from '../src/types.ts'
-import { variant } from '../src/variant.ts'
-
-const CLIENT_KEY_ID = 'test-key'
-const CLIENT_ASSERTION_TYPE = 'urn:ietf:params:oauth:client-assertion-type:jwt-bearer'
-const MAX_ASSERTION_LIFETIME_SECONDS = 300
 
 const LOINC_SYSTEM = 'http://loinc.org'
 const UCUM_SYSTEM = 'http://unitsofmeasure.org'
@@ -135,7 +127,6 @@ export interface Fixture {
     encounter: Encounter
     measurements: FixtureObservation[]
     tokens: (overrides?: Partial<Tokens>) => Promise<Tokens>
-    client: Awaited<ReturnType<typeof generateKeyPair>>
     issued: Map<string, IssuedToken>
     requests: RecordedRequest[]
     created: Map<string, Record<string, unknown>>
@@ -149,17 +140,11 @@ export interface Fixture {
     close: () => Promise<void>
 }
 
-export async function fixture(clientAlg: 'ES384' | 'RS384' = 'ES384', modulusLength = 3072): Promise<Fixture> {
+export async function fixture(): Promise<Fixture> {
     const server = Fastify()
     const signing = await generateKeyPair('RS256')
-    const client = await generateKeyPair(clientAlg, { extractable: true, modulusLength })
 
-    const directory = await mkdtemp(join(tmpdir(), 'smart-starter-test-'))
-    const keyPath = join(directory, 'private.json')
-    const clientJwk = { ...(await exportJWK(client.privateKey)), kid: CLIENT_KEY_ID, alg: clientAlg, use: 'sig' }
-    await writeFile(keyPath, JSON.stringify(clientJwk), { mode: 0o600 })
-
-    const config = createConfig(keyPath)
+    const config = createConfig()
     const registeredScopes = splitScopes(config.scopes)
     const metadata = createMetadata()
     const patient = createPatient()
@@ -170,7 +155,6 @@ export async function fixture(clientAlg: 'ES384' | 'RS384' = 'ES384', modulusLen
     const requests: RecordedRequest[] = []
     const created = new Map<string, Record<string, unknown>>()
     const createResponse: CreateResponse = { status: 201, location: 'correct', readback: 'correct', delivery: 'normal' }
-    const usedAssertions = new Set<string>()
     const codes = new Map<string, { challenge: string; scope: string }>()
 
     let tokenCalls = 0
@@ -178,21 +162,18 @@ export async function fixture(clientAlg: 'ES384' | 'RS384' = 'ES384', modulusLen
     let lastAuthorization: string | undefined
 
     async function issueTokens(overrides: Partial<Tokens> = {}): Promise<Tokens> {
-        const userContext: Partial<Tokens> =
-            config.variant === 'backend-services'
-                ? {}
-                : {
-                      patient: 'p1',
-                      encounter: 'e1',
-                      id_token: await new SignJWT({ fhirUser: 'Practitioner/h1' })
-                          .setProtectedHeader({ alg: 'RS256' })
-                          .setIssuer(config.issuer)
-                          .setAudience(config.clientId)
-                          .setSubject('h1')
-                          .setIssuedAt()
-                          .setExpirationTime('5m')
-                          .sign(signing.privateKey),
-                  }
+        const userContext: Partial<Tokens> = {
+            patient: 'p1',
+            encounter: 'e1',
+            id_token: await new SignJWT({ fhirUser: 'Practitioner/h1' })
+                .setProtectedHeader({ alg: 'RS256' })
+                .setIssuer(config.issuer)
+                .setAudience(config.clientId)
+                .setSubject('h1')
+                .setIssuedAt()
+                .setExpirationTime('5m')
+                .sign(signing.privateKey),
+        }
 
         const tokens: Tokens = {
             access_token: `synthetic-${randomUUID()}`,
@@ -212,57 +193,11 @@ export async function fixture(clientAlg: 'ES384' | 'RS384' = 'ES384', modulusLen
         return tokens
     }
 
-    async function isValidClientAssertion(body: URLSearchParams): Promise<boolean> {
-        if (body.get('client_assertion_type') !== CLIENT_ASSERTION_TYPE) {
-            return false
-        }
-
-        try {
-            const { payload, protectedHeader } = await jwtVerify(body.get('client_assertion') ?? '', client.publicKey, {
-                issuer: config.clientId,
-                subject: config.clientId,
-                audience: metadata.token_endpoint,
-                algorithms: [clientAlg],
-                requiredClaims: ['iss', 'sub', 'aud', 'exp', 'jti'],
-            })
-            const { jti, exp } = payload
-
-            const hasExpectedHeader = protectedHeader.kid === CLIENT_KEY_ID && protectedHeader.typ === 'JWT'
-            const isReplay = !jti || usedAssertions.has(jti)
-            const isTooLongLived = !exp || exp > Math.floor(Date.now() / 1000) + MAX_ASSERTION_LIFETIME_SECONDS
-
-            if (!hasExpectedHeader || isReplay || isTooLongLived) {
-                return false
-            }
-
-            usedAssertions.add(jti)
-
-            return true
-        } catch (error) {
-            if (!(error instanceof errors.JOSEError)) {
-                throw error
-            }
-
-            return false
-        }
-    }
-
-    async function isClientAuthenticated(body: URLSearchParams, authorization?: string): Promise<boolean> {
-        if (body.get('client_id') !== config.clientId) {
-            return false
-        }
-
-        if (config.variant === 'public') {
-            return !(authorization || body.has('client_assertion') || body.has('client_secret'))
-        }
-
-        if (config.variant === 'client-secret') {
-            const basic = decodeBasic(authorization)
-
-            return basic?.id === config.clientId && basic.secret === config.secret && !body.has('client_secret')
-        }
-
-        return isValidClientAssertion(body)
+    function isClientAuthenticated(body: URLSearchParams, authorization?: string): boolean {
+        return (
+            body.get('client_id') === config.clientId &&
+            !(authorization || body.has('client_assertion') || body.has('client_secret'))
+        )
     }
 
     async function exchangeAuthorizationCode(body: URLSearchParams, reply: FastifyReply): Promise<unknown> {
@@ -282,16 +217,6 @@ export async function fixture(clientAlg: 'ES384' | 'RS384' = 'ES384', modulusLen
         return issueTokens({ scope: authorization.scope })
     }
 
-    async function issueClientCredentials(body: URLSearchParams, reply: FastifyReply): Promise<unknown> {
-        const requested = splitScopes(body.get('scope') ?? '')
-
-        if (requested.some((scope) => !registeredScopes.includes(scope))) {
-            return reply.code(400).send({ error: 'invalid_scope' })
-        }
-
-        return issueTokens({ scope: requested.join(' ') })
-    }
-
     function registerTokenEndpoint(): void {
         server.addContentTypeParser('application/x-www-form-urlencoded', { parseAs: 'string' }, (_req, body, done) =>
             done(null, new URLSearchParams(String(body))),
@@ -302,22 +227,15 @@ export async function fixture(clientAlg: 'ES384' | 'RS384' = 'ES384', modulusLen
             lastBody = request.body
             lastAuthorization = request.headers.authorization
 
-            if (!(await isClientAuthenticated(lastBody, lastAuthorization))) {
+            if (!isClientAuthenticated(lastBody, lastAuthorization)) {
                 return reply.code(401).send({ error: 'invalid_client' })
             }
 
-            const isBackendServices = config.variant === 'backend-services'
-            const grantType = lastBody.get('grant_type')
-
-            if (grantType === 'authorization_code' && !isBackendServices) {
-                return exchangeAuthorizationCode(lastBody, reply)
-            }
-
-            if (grantType !== 'client_credentials' || !isBackendServices) {
+            if (lastBody.get('grant_type') !== 'authorization_code') {
                 return reply.code(400).send({ error: 'unsupported_grant_type' })
             }
 
-            return issueClientCredentials(lastBody, reply)
+            return exchangeAuthorizationCode(lastBody, reply)
         })
     }
 
@@ -364,16 +282,6 @@ export async function fixture(clientAlg: 'ES384' | 'RS384' = 'ES384', modulusLen
 
     function registerReadRoutes(): void {
         server.get('/fhir/Patient/p1', async () => patient)
-
-        server.get('/fhir/Patient', async (request, reply) => {
-            const params = searchParamsOf(request.url)
-
-            if (!usesOnlyParams(params, ['identifier']) || params.get('identifier') !== config.patientIdentifier) {
-                return outcome(reply, 400, 'invalid')
-            }
-
-            return searchset([patient])
-        })
 
         server.get('/fhir/Encounter', async (request, reply) => {
             const params = searchParamsOf(request.url)
@@ -565,7 +473,6 @@ export async function fixture(clientAlg: 'ES384' | 'RS384' = 'ES384', modulusLen
         encounter,
         measurements,
         tokens: issueTokens,
-        client,
         issued,
         requests,
         created,
@@ -581,28 +488,18 @@ export async function fixture(clientAlg: 'ES384' | 'RS384' = 'ES384', modulusLen
         lastAuthorization: () => lastAuthorization,
         signIdentity: async (claims) =>
             new SignJWT(claims).setProtectedHeader({ alg: 'RS256' }).sign(signing.privateKey),
-        close: async () => {
-            await server.close()
-            await rm(directory, { recursive: true, force: true })
-        },
+        close: async () => server.close(),
     }
 }
 
-function createConfig(keyPath: string): Config {
+function createConfig(): Config {
     return {
-        variant,
         port: 3100,
         fhirBase: '',
         issuer: '',
         clientId: 'test-team',
         redirectUri: 'http://localhost:3100/callback',
-        secret: 'synthetic-test-secret',
-        privateJwkPath: keyPath,
-        patientIdentifier: 'urn:oid:2.16.578.1.12.4.1.4.1|synthetic',
-        scopes:
-            variant === 'backend-services'
-                ? 'system/Patient.rs'
-                : 'openid fhirUser launch patient/Patient.r patient/Encounter.s',
+        scopes: 'openid fhirUser launch patient/Patient.r patient/Encounter.s',
     }
 }
 
@@ -652,30 +549,6 @@ function createTemperatureObservation(day: number): FixtureObservation {
             system: UCUM_SYSTEM,
             code: 'Cel',
         },
-    }
-}
-
-function formDecode(value: string): string | null {
-    return new URLSearchParams(`v=${value}`).get('v')
-}
-
-function decodeBasic(header = ''): { id: string | null; secret: string | null } | undefined {
-    const [scheme, encoded] = header.split(' ')
-
-    if (scheme !== 'Basic' || !encoded) {
-        return undefined
-    }
-
-    const credentials = Buffer.from(encoded, 'base64').toString()
-    const separator = credentials.indexOf(':')
-
-    if (separator < 0) {
-        return undefined
-    }
-
-    return {
-        id: formDecode(credentials.slice(0, separator)),
-        secret: formDecode(credentials.slice(separator + 1)),
     }
 }
 

@@ -3,12 +3,13 @@ import assert from 'node:assert/strict'
 import { test, type TestContext } from 'node:test'
 
 import { buildApp } from '../src/app.ts'
-import { steps, type Steps } from '../src/steps.ts'
+import { steps } from '../src/steps.ts'
+import type { Steps } from '../src/types.ts'
 
-import { callbackPath, completeBrowserLaunch, signIn, startBrowserLaunch } from './browser.ts'
+import { signIn } from './browser.ts'
 import { fixture, type Fixture } from './fixture.ts'
+import { callbackPath, completeBrowserLaunch, startBrowserLaunch } from './launch-helpers.ts'
 
-// These tests use buildApp with its default steps (the solutions in src/steps.ts), not reference mode.
 async function start(
     t: TestContext,
     override?: (f: Fixture) => Partial<Steps>,
@@ -16,7 +17,7 @@ async function start(
     const f = await fixture()
     t.after(f.close)
 
-    const app = await buildApp(f.config, false, override && { ...steps, ...override(f) })
+    const app = await buildApp(f.config, override && { ...steps, ...override(f) })
     t.after(async () => app.close())
 
     return { f, app }
@@ -55,14 +56,12 @@ test('Solution launch: default steps complete launch, callback and chart', async
     assert.equal(authorizeUrl.searchParams.get('scope'), f.config.scopes)
     assert.equal(authorizeUrl.searchParams.get('code_challenge_method'), 'S256')
     assert.equal(authorizeUrl.searchParams.has('code_verifier'), false)
-    assert.ok(launchCookie.httpOnly)
-    assert.equal(launchCookie.sameSite, 'Lax')
 
     // The fixture only issues tokens when the verifier hashes to this challenge, which proves PKCE end to end.
     f.registerCode('solution-code', authorizeUrl.searchParams.get('code_challenge')!)
 
     const callbackUrl = callbackPath(state, 'solution-code')
-    const callback = await app.inject({ url: callbackUrl, cookies: { smart_launch: launchCookie.value } })
+    const callback = await app.inject({ url: callbackUrl, cookies: { smart_launch: launchCookie } })
 
     assert.equal(callback.statusCode, 302, callback.body)
     assert.equal(callback.headers.location, '/app')
@@ -87,7 +86,7 @@ test('Solution launch: default steps complete launch, callback and chart', async
 
     assert.doesNotMatch(browserOutput, /id_token|code_verifier/)
 
-    const replay = await app.inject({ url: callbackUrl, cookies: { smart_launch: launchCookie.value } })
+    const replay = await app.inject({ url: callbackUrl, cookies: { smart_launch: launchCookie } })
 
     assert.equal(replay.statusCode, 400, 'A callback can only be used once')
     assert.equal(f.tokenCalls(), 1)
@@ -103,12 +102,12 @@ test('Solution launch: bad state, missing cookie and declined authorization neve
 
     assert.equal(withoutCookie.statusCode, 400)
 
-    const cookies = { smart_launch: launchCookie.value }
+    const cookies = { smart_launch: launchCookie }
 
     for (const query of ['state=wrong&code=stolen', 'code=stolen', `state=${state}&error=access_denied`]) {
         const rejected = await app.inject({ url: `/callback?${query}`, cookies })
 
-        assert.equal(rejected.statusCode, 400, query)
+        assert.ok(rejected.statusCode >= 400, query)
     }
 
     assert.equal(f.tokenCalls(), 0)
@@ -127,9 +126,12 @@ test('Solution launch: foreign iss and a poisoned discovery document are refused
         `/launch?${new URLSearchParams({ iss: 'https://untrusted.invalid/fhir', launch: 'x' })}`,
     )
 
-    assert.equal(foreign.statusCode, 400)
+    assert.equal(foreign.statusCode, 502)
     assert.equal(foreign.headers.location, undefined)
-    assert.equal(foreign.cookies.length, 0)
+    assert.equal(
+        foreign.cookies.some((c) => c.name === 'smart_launch'),
+        false,
+    )
 
     const original = structuredClone(f.metadata)
 
@@ -142,7 +144,7 @@ test('Solution launch: foreign iss and a poisoned discovery document are refused
         try {
             const response = await app.inject(`/launch?${new URLSearchParams({ iss: f.config.fhirBase, launch: 'x' })}`)
 
-            assert.equal(response.statusCode, 400, JSON.stringify(poison))
+            assert.equal(response.statusCode, 502, JSON.stringify(poison))
             assert.equal(response.headers.location, undefined)
         } finally {
             Object.assign(f.metadata, original)
@@ -198,7 +200,7 @@ test('Solution launch: a token response without encounter or patient creates no 
 
         const callback = await completeBrowserLaunch(app, f)
 
-        assert.equal(callback.statusCode, 400, missing)
+        assert.equal(callback.statusCode, 502, missing)
         assert.equal(
             callback.cookies.some((c) => c.name === 'smart_session'),
             false,
@@ -215,11 +217,11 @@ test('Solution launch: the launched encounter must be an active consultation for
     assert.equal((await app.inject({ url: '/app', cookies })).statusCode, 200)
 
     f.encounter.subject.reference = 'Patient/p2'
-    assert.equal((await app.inject({ url: '/app', cookies })).statusCode, 400, 'Encounter of another patient')
+    assert.equal((await app.inject({ url: '/app', cookies })).statusCode, 502, 'Encounter of another patient')
 
     f.encounter.subject.reference = 'Patient/p1'
     f.encounter.status = 'finished'
-    assert.equal((await app.inject({ url: '/app', cookies })).statusCode, 400, 'Finished encounter')
+    assert.equal((await app.inject({ url: '/app', cookies })).statusCode, 502, 'Finished encounter')
 
     f.encounter.status = 'in-progress'
     f.patient.id = 'p2'

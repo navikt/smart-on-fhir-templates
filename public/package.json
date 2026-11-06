@@ -5,9 +5,7 @@
   "type": "module",
   "engines": { "node": "22.x" },
   "scripts": {
-    "start": "node --env-file-if-exists=.env --import tsx src/main.ts",
-    "start:reference": "node --env-file-if-exists=.env --import tsx src/main.ts --reference",
-    "generate-key": "node --env-file-if-exists=.env --import tsx src/generate-key.ts",
+    "start": "node --watch --env-file-if-exists=.env --import tsx src/main.ts",
     "test": "node --import tsx --test --test-reporter=spec test/*.test.ts",
     "typecheck": "tsc --noEmit",
     "fmt": "oxfmt \"src/**/*.ts\" \"test/**/*.ts\"",
