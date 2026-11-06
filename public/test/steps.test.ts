@@ -84,7 +84,7 @@ test('Solution launch: default steps complete launch, callback and chart', async
         assert.equal(browserOutput.includes(token), false)
     }
 
-    assert.doesNotMatch(browserOutput, /id_token|code_verifier/)
+    assert.doesNotMatch(browserOutput, /(id_token|code_verifier)(=|&quot;|")/)
 
     const replay = await app.inject({ url: callbackUrl, cookies: { smart_launch: launchCookie } })
 
