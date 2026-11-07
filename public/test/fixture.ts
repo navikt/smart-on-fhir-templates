@@ -250,7 +250,6 @@ export async function fixture(): Promise<Fixture> {
             const interaction = requiredInteraction(request.method, parts)
             const isSystemToken = token.scopes.some((scope) => scope.startsWith('system/'))
 
-            // Match nav-epj's self-practitioner and non-system organization read exceptions.
             const isSelfPractitionerRead =
                 interaction === 'r' &&
                 resource === 'Practitioner' &&

@@ -1,5 +1,7 @@
 # SMART on FHIR templates for nav-epj
 
+Four Node/TypeScript starter apps for building a SMART on FHIR app against nav-epj, one per authentication method.
+
 | Folder | Flow | Client authentication | Use it to |
 |---|---|---|---|
 | [public/](./public/) | EHR launch | `none` (PKCE only) | Implement the auth steps yourself, then follow the [exercises](./public/EXERCISES.md) |

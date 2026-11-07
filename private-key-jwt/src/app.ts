@@ -72,14 +72,14 @@ export async function buildApp(config: Config): Promise<FastifyInstance> {
             throw new AppError(400, 'No pending launch in this browser. Launch again.')
         }
 
+        if (sessions.size >= MAX_SESSIONS) {
+            throw new AppError(503, 'Too many sessions; try again later.')
+        }
+
         transactions.delete(transactionId)
         reply.clearCookie(LAUNCH_COOKIE, cookieOptions)
 
         const session = await completeLaunch(config, transaction, request.query)
-
-        if (sessions.size >= MAX_SESSIONS) {
-            throw new AppError(503, 'Too many sessions; try again later.')
-        }
 
         const previousSessionId = request.cookies[SESSION_COOKIE]
 

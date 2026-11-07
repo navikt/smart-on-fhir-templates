@@ -20,7 +20,6 @@ export function configureServer(app: FastifyInstance): void {
     })
 
     app.setErrorHandler((error, request, reply) => {
-        // Fastify request logging is disabled so callback codes never reach access logs.
         request.log.warn({ category: error instanceof Error ? error.name : 'UnknownError' }, 'SMART request failed')
 
         const { status, message } = error instanceof AppError ? error : UNEXPECTED_ERROR

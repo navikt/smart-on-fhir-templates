@@ -105,16 +105,24 @@ async function requestToken(config: Config): Promise<Tokens> {
 
 export function tokenProvider(config: Config): () => Promise<string> {
     let cached: CachedToken | undefined
+    let pending: Promise<CachedToken> | undefined
+
+    async function refresh(): Promise<CachedToken> {
+        const tokens = await requestToken(config)
+        const lifetimeSeconds = Math.min(tokens.expires_in, MAX_CACHE_SECONDS)
+
+        return { accessToken: tokens.access_token, expiresAt: Date.now() + lifetimeSeconds * 1000 }
+    }
 
     return async () => {
         if (cached && Date.now() < cached.expiresAt - REFRESH_MARGIN_MS) {
             return cached.accessToken
         }
 
-        const tokens = await requestToken(config)
-        const lifetimeSeconds = Math.min(tokens.expires_in, MAX_CACHE_SECONDS)
-
-        cached = { accessToken: tokens.access_token, expiresAt: Date.now() + lifetimeSeconds * 1000 }
+        pending ??= refresh().finally(() => {
+            pending = undefined
+        })
+        cached = await pending
 
         return cached.accessToken
     }

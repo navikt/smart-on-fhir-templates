@@ -88,7 +88,6 @@ export async function request(url: string, init: RequestInit = {}): Promise<Resp
     })
 
     if (!response.ok) {
-        // Never include upstream bodies: they can contain credentials or patient data.
         throw new AppError(
             502,
             `Upstream returned HTTP ${response.status}. Check scopes, registration and mentor logs.`,

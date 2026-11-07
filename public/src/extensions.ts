@@ -124,7 +124,6 @@ export function journalNote(context: Context, text: string): JournalNote {
         subject: resourceReference('Patient', context.patient),
         context: { encounter: [resourceReference('Encounter', context.encounter)] },
         description: z.string().trim().min(1).parse(text),
-        // nav-epj stores the description, not an uploaded PDF. Its write contract rejects attachment.data.
         content: [{ attachment: { contentType: 'application/pdf' } }],
     }
 }

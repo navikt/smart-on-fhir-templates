@@ -21,7 +21,6 @@ export const unfinishedSteps: Steps = {
     loadChart: async () => unfinished(10, 'test'),
 }
 
-// Shape-only stand-ins: they return values of the right shape and verify nothing.
 export function shapeSteps(f: Fixture, overrides: Partial<Steps> = {}): Steps {
     let transactions = 0
 
