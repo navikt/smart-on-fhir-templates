@@ -10,8 +10,16 @@
 | Missing ID token or patient | Include `openid fhirUser launch` in `SCOPES` |
 | Token endpoint 401 | Check the secret, the `kid`, the key format and the assertion `aud` |
 | FHIR 403 | Compare `SCOPES` with the granted `scope` in the token response (backend: `system/Patient.rs`) |
-| Session expired | Launch again from the EHR, sessions live in server memory |
+| Session expired | Launch again from the EHR; sessions live in server memory |
 | Second app on another port | Set a new `PORT` and a `REDIRECT_URI` registered for it |
+| `EADDRINUSE` | Another process uses the port. Stop it, or set a new `PORT` and update the launch and redirect URLs in the registration |
+| `Basic authentication required` or `invalid_client` on the confidential apps | Check `CLIENT_ID` and `CLIENT_SECRET` against the registration, and that validation is `STRICT` with the matching client type |
+| `Unexpected authorization issuer` | `AUTH_ISSUER` must equal the `issuer` in the server's discovery document (`/.well-known/openid-configuration`), and its token endpoint must share that origin |
+| `Use HTTPS URLs, or HTTP on localhost` | Only `localhost` may use HTTP. Anything else needs HTTPS. In Codespaces use the `https://<codespace-name>-3100.app.github.dev` URL |
+| `running scripts is disabled on this system` | PowerShell blocks `npm.ps1`. Use `npm.cmd`, see [docs/install-node.md](./docs/install-node.md#powershell-blocks-npm) |
+| `node`, `npm` or `fnm` is not recognized | Open a new terminal. If it persists, check that the install folder is on your `PATH` |
+| `EBADENGINE` | The Node version differs from the folder's `.nvmrc`. Run `fnm use` there and check `node -v` |
+| `SELF_SIGNED_CERT_IN_CHAIN` or `UNABLE_TO_GET_ISSUER_CERT_LOCALLY` | A corporate proxy re-signs TLS. Get the CA certificate from IT and set `NODE_EXTRA_CA_CERTS` to its file path. For `npm`, also check the proxy settings in your npm config. Never disable TLS verification |
 
 `npm test` uses a local mock server. A running app talks to the SMART server you configured.
 

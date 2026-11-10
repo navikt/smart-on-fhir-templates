@@ -30,7 +30,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     try {
         const { publicJwkSet } = await generateKey(path)
 
-        console.error(`Private key written to ${path}. Give the host this public JWK Set:`)
+        console.error(`Private key written to ${path}. Register this public JWK Set with your SMART server:`)
         console.log(JSON.stringify(publicJwkSet, null, 2))
     } catch (error) {
         const keyAlreadyExists = (error as NodeJS.ErrnoException).code === 'EEXIST'

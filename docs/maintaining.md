@@ -2,7 +2,7 @@
 
 ## What runs
 
-[`.github/workflows/test.yaml`](../.github/workflows/test.yaml) runs for each app folder (`client-secret`, `private-key-jwt`, `backend-services`) on pull requests and pushes to `main`. It uses the Node version in the folder's `.nvmrc` and runs `npm ci`, `npm test`, `npm run typecheck`, `npm run fmt:check` and `npm run lint`.
+On pull requests and pushes to `main`, [`.github/workflows/test.yaml`](../.github/workflows/test.yaml) runs in each app folder (`client-secret`, `private-key-jwt`, `backend-services`) with the Node version in its `.nvmrc`. It runs `npm ci`, `npm test`, `npm run typecheck`, `npm run fmt:check` and `npm run lint`.
 
 [`.github/dependabot.yml`](../.github/dependabot.yml) opens weekly pull requests:
 
@@ -13,9 +13,9 @@
 
 ## Auto-merge
 
-[`.github/workflows/dependabot-auto-merge.yaml`](../.github/workflows/dependabot-auto-merge.yaml) is a separate merge-only workflow on `pull_request_target`. It is separate because Dependabot's `pull_request` runs get a read-only token, which cannot merge, see [troubleshooting Dependabot on Actions](https://docs.github.com/en/code-security/reference/supply-chain-security/troubleshoot-dependabot/dependabot-on-actions) and the [fetch-metadata notes](https://github.com/dependabot/fetch-metadata/tree/25dd0e34f4fe68f24cc83900b1fe3fe149efef98#readme). It never checks out or runs pull request code, and `test.yaml` stays read-only.
+The merge-only [`.github/workflows/dependabot-auto-merge.yaml`](../.github/workflows/dependabot-auto-merge.yaml) uses `pull_request_target` because Dependabot's `pull_request` runs receive a read-only token that cannot merge. See [troubleshooting Dependabot on Actions](https://docs.github.com/en/code-security/reference/supply-chain-security/troubleshoot-dependabot/dependabot-on-actions) and the [fetch-metadata notes](https://github.com/dependabot/fetch-metadata/tree/25dd0e34f4fe68f24cc83900b1fe3fe149efef98#readme). It never checks out or runs pull request code; `test.yaml` remains read-only.
 
-It only enables [auto-merge](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/configuring-pull-request-merges/managing-auto-merge-for-pull-requests-in-your-repository) (`gh pr merge --auto --squash --match-head-commit`). GitHub then merges once the required checks pass, so the required checks are what gate the merge. The workflow fails closed: anything it cannot confirm leaves the pull request open for review. It enables auto-merge only when all of these hold:
+The workflow only enables [auto-merge](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/configuring-pull-request-merges/managing-auto-merge-for-pull-requests-in-your-repository) (`gh pr merge --auto --squash --match-head-commit`). GitHub merges after the required checks pass. If the workflow cannot confirm a condition, it leaves the pull request open for review. Auto-merge is enabled only when:
 
 - the workflow actor and the pull request author are both `dependabot[bot]`, and the branch is in this repository
 - the ecosystem is npm
@@ -34,7 +34,7 @@ These are repository settings that files cannot set:
 
 ## Major updates
 
-Review the changelog, run the app, then merge by hand. You can also assign the pull request to [Copilot coding agent](https://docs.github.com/en/copilot/concepts/agents/coding-agent/about-coding-agent) to adapt the code, and review its result like any other change.
+Review the changelog and run the app before merging by hand. You can assign the pull request to [Copilot coding agent](https://docs.github.com/en/copilot/concepts/agents/coding-agent/about-coding-agent) to adapt the code; review its changes like any other contribution.
 
 ## Node upgrades
 

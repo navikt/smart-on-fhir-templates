@@ -1,12 +1,18 @@
 # Install Node
 
-Each app folder has an `.nvmrc` with the Node major it runs on: `backend-services/` needs 26, `client-secret/` and `private-key-jwt/` need 22.
+Each app folder's `.nvmrc` specifies its Node version: `backend-services/` uses 26, while `client-secret/` and `private-key-jwt/` use 22.
 
-npm ships with Node. All installs below are per user and need no administrator rights, unless your organisation's policy blocks them. Ask your IT department rather than working around a policy.
+npm ships with Node. Local Node installs below are per user and do not require administrator rights. If your organisation blocks an option, ask IT rather than bypassing the policy.
 
 ## macOS and Linux
 
-Install [fnm](https://github.com/Schniz/fnm#installation), then in an app folder:
+Add the `fnm env` line for your shell to its profile (`~/.zshrc` or `~/.bashrc`) so `fnm use` works in new shells:
+
+```sh
+eval "$(fnm env --use-on-cd --shell zsh)"
+```
+
+For bash, use `--shell bash`. Then, in an app folder:
 
 ```sh
 fnm install
@@ -14,11 +20,11 @@ fnm use
 node -v
 ```
 
-`fnm install` and `fnm use` read the folder's `.nvmrc`. To make `fnm use` work in every new shell, add the `fnm env` line from the fnm installation page to your shell profile.
+`fnm install` and `fnm use` read the folder's `.nvmrc`. Open a new terminal after editing the profile.
 
 ## Windows
 
-Do not use `winget install OpenJS.NodeJS`. That installer is machine-wide and asks for administrator rights.
+Avoid `winget install OpenJS.NodeJS`; it installs Node machine-wide and requires administrator rights.
 
 ### 1. winget and fnm for your user
 
@@ -26,21 +32,16 @@ Do not use `winget install OpenJS.NodeJS`. That installer is machine-wide and as
 winget install Schniz.fnm --scope user
 ```
 
-Open a new terminal, then in an app folder:
+Open a new terminal, initialize fnm for the session, then run these commands from an app folder:
 
 ```powershell
+fnm env --use-on-cd --shell powershell | Out-String | Invoke-Expression
 fnm install
 fnm use
 node -v
 ```
 
-If `fnm use` says the shell is not set up, run this in the current session:
-
-```powershell
-fnm env --use-on-cd --shell powershell | Out-String | Invoke-Expression
-```
-
-To make it permanent, add the same line to your PowerShell profile (`notepad $PROFILE`). If your execution policy blocks the profile, keep using the per-session command.
+The first line initializes fnm for this session. To persist it, add the line to your PowerShell profile (`notepad $PROFILE`). If your execution policy blocks the profile, run it each session.
 
 ### 2. fnm without winget
 
@@ -48,7 +49,7 @@ Download the zip from the [fnm releases](https://github.com/Schniz/fnm/releases)
 
 ### 3. Portable Node zip
 
-1. Download the Windows x64 zip from [nodejs.org](https://nodejs.org/en/download) and the matching `SHASUMS256.txt` from the same release folder on [nodejs.org/dist](https://nodejs.org/dist/).
+1. Pick the version the app folder needs and download the Windows x64 zip from [latest-v22.x](https://nodejs.org/dist/latest-v22.x/) (`client-secret/`, `private-key-jwt/`) or [latest-v26.x](https://nodejs.org/dist/latest-v26.x/) (`backend-services/`). The same page lists `SHASUMS256.txt`.
 2. Compare the hash with the line for your zip file:
 
    ```powershell
@@ -57,6 +58,8 @@ Download the zip from the [fnm releases](https://github.com/Schniz/fnm/releases)
 
 3. Unpack to a folder you own, for example `C:\Users\<you>\node`. The zip contains a nested folder `node-v<version>-win-x64`. Put that nested folder, the one holding `node.exe` and `npm.cmd`, on your user `PATH` (Windows search > "Edit environment variables for your account").
 4. Open a new terminal and run `node -v`.
+
+Keep only one version on `PATH`. To work with both 22 and 26, use fnm (options 1 or 2) instead.
 
 ### 4. GitHub Codespaces
 
@@ -71,12 +74,13 @@ npm.cmd ci
 npm.cmd test
 ```
 
-You can also use Command Prompt, where `npm` resolves to `npm.cmd`. Do not weaken your execution policy only for this.
+You can also use Command Prompt, where `npm` resolves to `npm.cmd`. Do not weaken the execution policy just to run npm.
 
 ## Codespaces
 
 [GitHub Codespaces](https://docs.github.com/en/codespaces) gives you a ready Node 26 container from this repository's `.devcontainer/devcontainer.json`.
 
-- Choose the machine location when you create the codespace, for example Europe West, if it is offered. Codespaces runs on a US provider and your organisation's rules still apply, so use synthetic data only.
-- The devcontainer forwards port 3100, which opens as `localhost` in your browser. Run `npm ci` in the app folder you choose.
-- The `client-secret/` and `private-key-jwt/` apps need Node 22. The image includes nvm: run `nvm install 22` and `nvm use 22` in that folder.
+- Choose a European machine location when creating the codespace, if available, or set your [default region](https://docs.github.com/en/codespaces/setting-your-user-preferences/setting-your-default-region-for-github-codespaces). Follow your organisation's rules and use synthetic data only.
+- The devcontainer forwards port 3100. Run `npm ci` in the app folder you choose.
+- The EHR apps need a public callback: set `REDIRECT_URI` to `https://<codespace-name>-3100.app.github.dev/callback` and register that and `https://<codespace-name>-3100.app.github.dev/launch` with the SMART server, not `localhost`. Set the port to public or private as your SMART server needs.
+- `client-secret/` and `private-key-jwt/` need Node 22. The image includes nvm: run `nvm install 22` and `nvm use 22` in that folder.
