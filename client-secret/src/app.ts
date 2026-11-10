@@ -101,7 +101,7 @@ export async function buildApp(config: Config): Promise<FastifyInstance> {
         const session = sessions.get(request.cookies[SESSION_COOKIE] ?? '')
 
         if (!session) {
-            throw new AppError(401, 'No session. Launch this app from the EPJ app picker.')
+            throw new AppError(401, 'No session. Launch this app from your EHR.')
         }
 
         const patient = await fhirGet(config, session.accessToken, `Patient/${session.patient}`, PatientSchema)

@@ -140,7 +140,7 @@ function callbackCode(query: unknown, transaction: Transaction): string {
     const isExpired = Date.now() - transaction.createdAt > TRANSACTION_TTL_MS
 
     if (!result.success || !stateMatches || isExpired) {
-        throw new AppError(400, 'Missing, expired or mismatched OAuth state. Launch again from the EPJ.')
+        throw new AppError(400, 'Missing, expired or mismatched OAuth state. Launch again from your EHR.')
     }
 
     const { code, error } = result.data
