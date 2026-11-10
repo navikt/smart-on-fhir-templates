@@ -8,7 +8,7 @@ Starting points for [SMART on FHIR](https://hl7.org/fhir/smart-app-launch/) apps
 | [client-secret/](./client-secret/) | EHR launch | `client_secret_basic` | 22 |
 | [private-key-jwt/](./private-key-jwt/) | EHR launch | `private_key_jwt` | 22 |
 
-The two EHR launch folders implement SMART authorization by hand. Their planned replacement is a single `ehr-launch` app built on [`@navikt/smart-on-fhir`](https://github.com/navikt/smart-on-fhir). That migration is not done yet, so the folders above are what exists today.
+The two EHR launch folders implement SMART authorization by hand. Their planned replacement is a single `ehr-launch` app built on [`@navikt/smart-on-fhir`](https://github.com/navikt/smart-on-fhir), a library that is under active development. That migration is not done yet, and nothing here uses the library, so the folders above are what exists today.
 
 ## Get started
 
@@ -34,7 +34,7 @@ The two EHR launch folders implement SMART authorization by hand. Their planned 
 
 ## Norwegian context
 
-- [HelseID](https://utviklerportal.nhn.no/informasjonstjenester/helseid) is not a SMART launch. It is a confidential client with `private_key_jwt` and DPoP. `@navikt/smart-on-fhir` has no DPoP support, so these templates are not HelseID-ready.
+- [HelseID](https://utviklerportal.nhn.no/informasjonstjenester/helseid) is not a SMART launch. It is a confidential client with `private_key_jwt` and DPoP. These templates do not implement DPoP, so they are not HelseID-ready.
 - FNR and DNR are string identifiers (a system and a value), not FHIR resource IDs. Search with `identifier=system|value`.
 - Profiles without a legal basis for sharing need a data processing or vendor agreement before any real use.
 
@@ -42,11 +42,9 @@ The two EHR launch folders implement SMART authorization by hand. Their planned 
 
 - Sessions and tokens live in server memory and are lost on restart. There is no persistent or shared storage.
 - The apps run over plain HTTP on localhost. Production needs HTTPS, a persistent session store and a security review.
-- `@navikt/smart-on-fhir` is under active development, so expect breaking changes.
 
 ## More
 
 - [TROUBLESHOOTING.md](./TROUBLESHOOTING.md): common errors
 - [docs/install-node.md](./docs/install-node.md): installing Node on each platform
-- [docs/github-packages-token.md](./docs/github-packages-token.md): token for GitHub Packages
 - [docs/maintaining.md](./docs/maintaining.md): CI, Dependabot and Node upgrades

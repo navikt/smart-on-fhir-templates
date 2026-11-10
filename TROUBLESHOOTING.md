@@ -12,7 +12,6 @@
 | FHIR 403 | Compare `SCOPES` with the granted `scope` in the token response (backend: `system/Patient.rs`) |
 | Session expired | Launch again from the EHR, sessions live in server memory |
 | Second app on another port | Set a new `PORT` and a `REDIRECT_URI` registered for it |
-| Browser cannot reach `backend-services` in Codespaces | Set `HOST=0.0.0.0` in `.env`, see [docs/install-node.md](./docs/install-node.md#codespaces) |
 
 `npm test` uses a local mock server. A running app talks to the SMART server you configured.
 

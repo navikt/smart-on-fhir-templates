@@ -4,6 +4,5 @@
     "forwardPorts": [3100],
     "portsAttributes": {
         "3100": { "label": "app", "onAutoForward": "notify" }
-    },
-    "postCreateCommand": "npm ci --prefix backend-services"
+    }
 }

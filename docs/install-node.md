@@ -1,6 +1,6 @@
 # Install Node
 
-Each app folder has an `.nvmrc` with the Node major it runs on: `backend-services/` needs 26, `client-secret/` and `private-key-jwt/` need 22. The planned `@navikt/smart-on-fhir` apps will target 26, but the published library still requires Node 24, so an install with `engine-strict` fails on 26 until it releases a wider range.
+Each app folder has an `.nvmrc` with the Node major it runs on: `backend-services/` needs 26, `client-secret/` and `private-key-jwt/` need 22.
 
 npm ships with Node. All installs below are per user and need no administrator rights, unless your organisation's policy blocks them. Ask your IT department rather than working around a policy.
 
@@ -78,9 +78,5 @@ You can also use Command Prompt, where `npm` resolves to `npm.cmd`. Do not weake
 [GitHub Codespaces](https://docs.github.com/en/codespaces) gives you a ready Node 26 container from this repository's `.devcontainer/devcontainer.json`.
 
 - Choose the machine location when you create the codespace, for example Europe West, if it is offered. Codespaces runs on a US provider and your organisation's rules still apply, so use synthetic data only.
-- Node listens on `127.0.0.1` by default, which port forwarding cannot reach. For `backend-services/`, set `HOST=0.0.0.0` in `.env`. The devcontainer forwards port 3100.
+- The devcontainer forwards port 3100, which opens as `localhost` in your browser. Run `npm ci` in the app folder you choose.
 - The `client-secret/` and `private-key-jwt/` apps need Node 22. The image includes nvm: run `nvm install 22` and `nvm use 22` in that folder.
-
-## Environment variables
-
-A new environment variable, such as `NPM_AUTH_TOKEN` from [github-packages-token.md](./github-packages-token.md), is only seen by programs started afterwards. Restart VS Code completely (all windows) to pick it up.
