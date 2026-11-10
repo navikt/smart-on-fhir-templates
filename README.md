@@ -1,7 +1,5 @@
 # SMART on FHIR templates for nav-epj
 
-Four Node/TypeScript starter apps for building a SMART on FHIR app against nav-epj, one per authentication method.
-
 | Folder | Flow | Client authentication | Use it to |
 |---|---|---|---|
 | [public/](./public/) | EHR launch | `none` (PKCE only) | Implement the auth steps yourself, then follow the [exercises](./public/EXERCISES.md) |
@@ -21,7 +19,7 @@ Four Node/TypeScript starter apps for building a SMART on FHIR app against nav-e
    npm start
    ```
 
-   In `public/`, `npm start` shows a checklist of ten TODOs to implement. The answers are on the [`solutions` branch](https://github.com/navikt/smart-on-fhir-templates/tree/solutions/public) of the upstream repo, see [Stuck?](./public/README.md#stuck).
+   In `public/`, `npm start` shows a checklist of the ten launch steps. They are TODOs on `main` and done on this branch, with a walkthrough in [public/SOLUTIONS.md](./public/SOLUTIONS.md).
 
 3. Get your own test clinician login from the host. The host registers each app in nav-epj by hand, except the shared hackathon client in `public/`. The folder README lists what to send.
 

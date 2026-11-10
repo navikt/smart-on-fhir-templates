@@ -30,11 +30,22 @@ export function configureServer(app: FastifyInstance): void {
                 .send(page(`SMART launch: TODO ${error.step} needs work`, renderChecklist(error.checklist)))
         }
 
-        const { status, message } = error instanceof AppError ? error : UNEXPECTED_ERROR
+        const { status, message } = error instanceof AppError ? error : (clientError(error) ?? UNEXPECTED_ERROR)
 
         return reply
             .code(status)
             .type('text/html')
             .send(page('SMART request failed', `<p>${escapeHtml(message)}</p>`))
     })
+}
+
+// Fastify rejects some requests itself (unsupported content type, body too large). Keep its 4xx status.
+function clientError(error: unknown): { status: number; message: string } | undefined {
+    const status = error instanceof Error && 'statusCode' in error ? error.statusCode : undefined
+
+    if (typeof status !== 'number' || status < 400 || status >= 500) {
+        return undefined
+    }
+
+    return { status, message: 'The request was not accepted.' }
 }

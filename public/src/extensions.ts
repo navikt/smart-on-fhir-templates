@@ -1,14 +1,17 @@
 import { z } from 'zod'
 
 import { AppError, type Config } from './config.ts'
-import { bundle, fhir, fhirUrl, IdSchema, referenceId, request, searchPath } from './http.ts'
+import { bundle, fhir, fhirUrl, IdSchema, referenceId, request, searchPath, UpstreamStatusError } from './http.ts'
 import type { Context, Tokens } from './types.ts'
 
-const LOINC_SYSTEM = 'http://loinc.org'
+export const LOINC_SYSTEM = 'http://loinc.org'
 const UCUM_SYSTEM = 'http://unitsofmeasure.org'
 
-const BODY_TEMPERATURE_LOINC = '8310-5'
+export const BODY_TEMPERATURE_LOINC = '8310-5'
 const MIN_TREND_READINGS = 3
+
+const UNCERTAIN_CREATE_MESSAGE =
+    'The EPJ did not confirm the save. It may already have been saved, so check the EPJ before submitting again.'
 
 const ConditionSchema = z.object({ resourceType: z.literal('Condition') }).passthrough()
 
@@ -133,26 +136,37 @@ export async function createResource(
     tokens: Tokens,
     resource: TemperatureObservation | JournalNote,
 ): Promise<CreatedResource> {
-    const response = await request(fhirUrl(config, resource.resourceType), {
-        method: 'POST',
-        headers: {
-            Authorization: `Bearer ${tokens.access_token}`,
-            'Content-Type': 'application/fhir+json',
-            Accept: 'application/fhir+json',
-        },
-        body: JSON.stringify(resource),
-    })
+    try {
+        const response = await request(fhirUrl(config, resource.resourceType), {
+            method: 'POST',
+            headers: {
+                Authorization: `Bearer ${tokens.access_token}`,
+                'Content-Type': 'application/fhir+json',
+                Accept: 'application/fhir+json',
+            },
+            body: JSON.stringify(resource),
+        })
 
-    const created = CreatedResourceSchema.parse(await response.json())
-    const location = response.headers.get('Location')
+        const created = CreatedResourceSchema.parse(await response.json())
+        const location = response.headers.get('Location')
 
-    const isCreatedResponse = response.status === 201 && created.resourceType === resource.resourceType
+        const isCreatedResponse = response.status === 201 && created.resourceType === resource.resourceType
 
-    if (!isCreatedResponse || !location || referenceId(config, location, resource.resourceType) !== created.id) {
-        throw new AppError(502, 'Create response must be 201 with a server ID and matching Location.')
+        if (!isCreatedResponse || !location || referenceId(config, location, resource.resourceType) !== created.id) {
+            throw new Error('Unexpected create response')
+        }
+
+        return created
+    } catch (error) {
+        // A 4xx means the server refused the write. Anything else (disconnect, timeout, 5xx, an unreadable or
+        // unexpected 201) leaves it unknown whether the resource was stored. The cause is dropped on purpose:
+        // it can contain upstream content.
+        if (error instanceof UpstreamStatusError && error.upstreamStatus >= 400 && error.upstreamStatus < 500) {
+            throw error
+        }
+
+        throw new AppError(502, UNCERTAIN_CREATE_MESSAGE)
     }
-
-    return created
 }
 
 function resourceReference(type: 'Patient' | 'Encounter', id: string): Reference {

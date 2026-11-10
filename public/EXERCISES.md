@@ -1,6 +1,7 @@
 # Ideas for your SMART app
 
 Bronze, Silver and Gold ideas from the [published track](https://hl7norway.github.io/Norwegian-FHIR-Hackathon-2026/currentbuild/smart-track.html).
+Worked solutions for all of them are in [SOLUTIONS.md](./SOLUTIONS.md).
 Borrow helpers from [src/extensions.ts](./src/extensions.ts) or write your own FHIR calls.
 Pick a [problem card](#problem-cards) or bring your own idea.
 Bronze and Silver build on this `public/` app. Gold ideas point at the finished templates in the other folders.

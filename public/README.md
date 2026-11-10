@@ -41,35 +41,27 @@ npm start
 
 Log in at https://epj.ekstern.dev.nav.no with your own test clinician, open a patient marked "Pågår nå" and pick **Hackathon starter** in the app picker.
 
-The page lists ten steps grouped by the [SMART App Launch](https://build.fhir.org/ig/HL7/smart-app-launch/en/app-launch.html) phases. Each step shows ✅, ❌ or ⬜ with a hint and the next action. The first launch fails at TODO 1.
+The page lists ten steps grouped by the [SMART App Launch](https://build.fhir.org/ig/HL7/smart-app-launch/en/app-launch.html) phases. Each step shows ✅, ❌ or ⬜ with a hint and the next action. On this branch every step is implemented, so the launch ends on the consultation page with ten ✅.
 
-## 5. Build your own
+## 5. Study the solutions
 
-Implement the next TODO in [src/steps.ts](./src/steps.ts), then retry:
-
-- TODO 1 to 5 failed: refresh the tab within 5 minutes of the launch.
-- Later, or TODO 6 to 10: pick **Hackathon starter** in the app picker again. You do not need to close the consultation.
-
-```ts
-pkce() {
-    return unfinished(3, 'Generate a random PKCE verifier and its base64url SHA-256 challenge')
-},
-```
+This branch has every TODO in [src/steps.ts](./src/steps.ts) done. See [SOLUTIONS.md](./SOLUTIONS.md) for the walkthroughs, scopes per feature and break-it checks. To build the steps yourself, start from `main`.
 
 Notes:
 
 - ✅ means the output has the right shape. It is not a security certification: the checks do not prove randomness, state handling or ID token signature verification. See [Break it](./EXERCISES.md#break-it).
-- Errors you throw are shown on the page. Known secret values of 8 or more characters (codes, verifiers, state, tokens) are redacted. Other text in an error is not guaranteed to be, so keep secrets out of error messages.
-- Progress belongs to the browser that started the launch.
-- Worked answers are on the `solutions` branch of the upstream repo. [Stuck?](#stuck) shows how to use them.
+- Errors thrown in a step are shown on the page. Known secret values of 8 or more characters (codes, verifiers, state, tokens) are redacted. Other text in an error is not guaranteed to be, so keep secrets out of error messages.
+- Progress belongs to the browser that started the launch, and a restart clears it.
 
 ## Stuck?
 
+This branch is the finished app. If you build the steps yourself from `main` and get stuck:
+
 Each ❌ step on the checklist has a hint, a short explanation of why the step exists and a link to the SMART spec.
 
-To see a working answer, open [`steps.ts` on the `solutions` branch](https://github.com/navikt/smart-on-fhir-templates/blob/solutions/public/src/steps.ts) and find the function for your step, for example `pkce()`. It can call helpers that your `src/` does not have, so compare it with your code instead of pasting it in.
+To see a working answer, read the function for your step in [src/steps.ts](./src/steps.ts), for example `pkce()`. It can call helpers that your `src/` does not have, so compare it with your code instead of pasting it in.
 
-To run the finished app, clone the `solutions` branch into a folder next to your repo. Your own code is not touched. Stop your own app first, since both use port 3100, then run this in `public/`:
+To run this finished app, clone this branch into a folder next to your repo. Your own code is not touched. Stop your own app first, since both use port 3100, then run this in your `public/`:
 
 ```sh
 git clone --branch solutions https://github.com/navikt/smart-on-fhir-templates ../../smart-solved
@@ -83,7 +75,7 @@ If the finished app shows no checklist, the discussion questions are under [Befo
 
 ## Skip Bronze and pacing
 
-You can switch to the finished app at any point and build your own idea on top of it. Set it up as in [Stuck?](#stuck) and go through [Before you build](#before-you-build). The [solutions guide](https://github.com/navikt/smart-on-fhir-templates/blob/solutions/public/SOLUTIONS.md) explains each step.
+You can switch to this finished app at any point and build your own idea on top of it. Set it up as in [Stuck?](#stuck) and go through [Before you build](#before-you-build). [SOLUTIONS.md](./SOLUTIONS.md) explains each step.
 
 ## Before you build
 

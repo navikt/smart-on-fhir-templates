@@ -1,5 +1,5 @@
 import cookie from '@fastify/cookie'
-import Fastify, { LogController, type FastifyInstance } from 'fastify'
+import Fastify, { LogController, type FastifyInstance, type FastifyRequest } from 'fastify'
 
 import {
     checkAuthorizationUrl,
@@ -13,12 +13,16 @@ import {
     checkTokens,
     checkTransaction,
 } from './checks.ts'
+import { registerClinicalApp } from './clinical-app.ts'
 import { AppError, type Config } from './config.ts'
 import { escapeHtml, page, randomToken } from './http.ts'
 import { Attempts, renderChecklist, type Attempt } from './progress.ts'
+import { appPage } from './routes.ts'
+import { registerScopeDetective } from './scope-detective.ts'
 import { configureServer } from './server.ts'
 import { steps } from './steps.ts'
 import { TRANSACTION_TTL_MS, type Chart, type Session, type Steps, type Transaction } from './types.ts'
+import { registerWriteBack } from './write-back.ts'
 
 const LAUNCH_COOKIE = 'smart_launch'
 const SESSION_COOKIE = 'smart_session'
@@ -50,6 +54,16 @@ export async function buildApp(config: Config, implementation: Steps = steps): P
         httpOnly: true,
         sameSite: 'lax' as const,
         secure: new URL(config.redirectUri).protocol === 'https:',
+    }
+
+    function requireSession(request: FastifyRequest): Session {
+        const session = sessions.get(request.cookies[SESSION_COOKIE] ?? '')
+
+        if (!session) {
+            throw new AppError(401, 'Session missing or expired. Launch again from the EPJ.')
+        }
+
+        return session
     }
 
     app.addHook('onRequest', async () => {
@@ -166,7 +180,13 @@ export async function buildApp(config: Config, implementation: Steps = steps): P
 
         const sessionId = randomToken()
         const maxAge = Math.min(tokens.expires_in, MAX_SESSION_SECONDS)
-        sessions.set(sessionId, { tokens, context, expiresAt: Date.now() + maxAge * 1000, attempt })
+        sessions.set(sessionId, {
+            tokens,
+            context,
+            expiresAt: Date.now() + maxAge * 1000,
+            attempt,
+            csrfToken: randomToken(),
+        })
         reply.setCookie(SESSION_COOKIE, sessionId, { ...cookieOptions, maxAge })
         reply.setCookie(PROGRESS_COOKIE, attempt.id, { ...cookieOptions, maxAge: PROGRESS_SECONDS })
 
@@ -174,12 +194,7 @@ export async function buildApp(config: Config, implementation: Steps = steps): P
     })
 
     app.get('/app', async (request, reply) => {
-        const session = sessions.get(request.cookies[SESSION_COOKIE] ?? '')
-
-        if (!session) {
-            throw new AppError(401, 'Session missing or expired. Launch again from the EPJ.')
-        }
-
+        const session = requireSession(request)
         const { attempt } = session
         const chart = await attempt.run(
             10,
@@ -190,12 +205,18 @@ export async function buildApp(config: Config, implementation: Steps = steps): P
         return reply
             .type('text/html')
             .send(
-                page(
+                appPage(
                     'Active consultation',
                     chartContent(chart, config, session) + renderChecklist(attempt.checklist()),
                 ),
             )
     })
+
+    const routeDeps = { config, requireSession }
+
+    registerClinicalApp(app, routeDeps)
+    registerScopeDetective(app, routeDeps)
+    registerWriteBack(app, routeDeps)
 
     return app
 }

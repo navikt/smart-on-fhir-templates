@@ -80,6 +80,9 @@ const DocumentInputSchema = z
     })
     .strict()
 
+// Sent in every fixture OperationOutcome, like a real server's diagnostics: the app must never show it.
+export const UPSTREAM_DETAIL = 'upstream-detail-must-not-leak'
+
 export const launchContext: Context = { patient: 'p1', encounter: 'e1', practitioner: 'h1' }
 
 export function bearer(tokens: Tokens): { Authorization: string } {
@@ -112,6 +115,9 @@ interface FixtureObservation {
 interface CreateResponse {
     status: number
     location: 'correct' | 'missing' | 'wrong'
+    readback: 'correct' | 'missing' | 'wrong-id' | 'other-patient'
+    // What the server does after it has stored the resource.
+    delivery: 'normal' | 'disconnect' | 'empty' | 'malformed'
 }
 
 export interface Fixture {
@@ -125,6 +131,7 @@ export interface Fixture {
     requests: RecordedRequest[]
     created: Map<string, Record<string, unknown>>
     createResponse: CreateResponse
+    registeredScopes: string[]
     registerCode: (code: string, challenge: string, scope?: string) => void
     tokenCalls: () => number
     lastBody: () => URLSearchParams
@@ -147,7 +154,7 @@ export async function fixture(): Promise<Fixture> {
     const issued = new Map<string, IssuedToken>()
     const requests: RecordedRequest[] = []
     const created = new Map<string, Record<string, unknown>>()
-    const createResponse: CreateResponse = { status: 201, location: 'correct' }
+    const createResponse: CreateResponse = { status: 201, location: 'correct', readback: 'correct', delivery: 'normal' }
     const codes = new Map<string, { challenge: string; scope: string }>()
 
     let tokenCalls = 0
@@ -384,9 +391,26 @@ export async function fixture(): Promise<Fixture> {
                 const resource = { ...body, id: `created-${created.size + 1}` }
                 created.set(`${type}/${resource.id}`, resource)
 
+                if (createResponse.delivery === 'disconnect') {
+                    // Stored, then the connection drops before any response. A hijacked reply skips onResponse.
+                    requests.push({ path: `/fhir/${type}`, query: {}, method: 'POST', status: 0 })
+                    reply.hijack()
+                    request.raw.socket.destroy()
+
+                    return reply
+                }
+
                 if (createResponse.location !== 'missing') {
                     const locationId = createResponse.location === 'correct' ? resource.id : 'wrong-id'
                     reply.header('Location', `${config.fhirBase}/${type}/${locationId}`)
+                }
+
+                if (createResponse.delivery === 'empty') {
+                    return reply.code(createResponse.status).send('')
+                }
+
+                if (createResponse.delivery === 'malformed') {
+                    return reply.code(createResponse.status).type('application/fhir+json').send('{not json')
                 }
 
                 return reply.code(createResponse.status).send(resource)
@@ -395,7 +419,19 @@ export async function fixture(): Promise<Fixture> {
             server.get<{ Params: { id: string } }>(`/fhir/${type}/:id`, async (request, reply) => {
                 const resource = created.get(`${type}/${request.params.id}`)
 
-                return resource ?? outcome(reply, 404, 'not-found')
+                if (!resource || createResponse.readback === 'missing') {
+                    return outcome(reply, 404, 'not-found')
+                }
+
+                if (createResponse.readback === 'wrong-id') {
+                    return { ...resource, id: 'someone-elses-resource' }
+                }
+
+                if (createResponse.readback === 'other-patient') {
+                    return { ...resource, subject: { reference: 'Patient/p2' } }
+                }
+
+                return resource
             })
         }
     }
@@ -440,6 +476,7 @@ export async function fixture(): Promise<Fixture> {
         requests,
         created,
         createResponse,
+        registeredScopes,
         registerCode: (code, challenge, scope = config.scopes) => {
             const grantedScopes = splitScopes(scope).filter((candidate) => registeredScopes.includes(candidate))
 
@@ -523,7 +560,9 @@ function searchset(resources: unknown[]): object {
 }
 
 function outcome(reply: FastifyReply, status: number, code: string): FastifyReply {
-    return reply.code(status).send({ resourceType: 'OperationOutcome', issue: [{ severity: 'error', code }] })
+    return reply
+        .code(status)
+        .send({ resourceType: 'OperationOutcome', issue: [{ severity: 'error', code, diagnostics: UPSTREAM_DETAIL }] })
 }
 
 function requiredInteraction(method: string, pathParts: string[]): 'c' | 's' | 'r' {
