@@ -2,7 +2,6 @@ import { z } from 'zod'
 
 export interface Config {
     port: number
-    host: string
     fhirBase: string
     issuer: string
     clientId: string
@@ -24,7 +23,6 @@ const LOOPBACK_HOSTNAMES = ['localhost', '127.0.0.1', '[::1]']
 
 const EnvSchema = z.object({
     PORT: z.coerce.number().int().min(1024).max(65535).default(3100),
-    HOST: z.string().min(1).default('127.0.0.1'),
     FHIR_BASE_URL: z.url(),
     AUTH_ISSUER: z.url(),
     CLIENT_ID: z
@@ -81,7 +79,6 @@ export function readConfig(env = process.env): Config {
 
     return {
         port: values.PORT,
-        host: values.HOST,
         fhirBase: trustedBaseUrl(values.FHIR_BASE_URL),
         issuer: trustedBaseUrl(values.AUTH_ISSUER),
         clientId: values.CLIENT_ID,

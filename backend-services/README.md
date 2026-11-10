@@ -19,7 +19,6 @@ Create `.env` in this folder with the text below, saved as UTF-8 (in Windows Pow
 
 ```properties
 PORT=3100
-HOST=127.0.0.1
 FHIR_BASE_URL=https://ehr.example.org/fhir
 AUTH_ISSUER=https://ehr.example.org/oidc
 CLIENT_ID=replace-with-your-client-id
@@ -41,7 +40,6 @@ Then open http://localhost:3100.
 | Variable | Value |
 |---|---|
 | `PORT` | `3100` |
-| `HOST` | `127.0.0.1` (default). Use `0.0.0.0` only in Codespaces, where port forwarding needs it |
 | `FHIR_BASE_URL` | FHIR base URL of your SMART server |
 | `AUTH_ISSUER` | OIDC issuer of the SMART server |
 | `CLIENT_ID` | Client ID registered for your app |
