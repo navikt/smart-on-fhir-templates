@@ -91,6 +91,7 @@ async function setup(t: TestContext, expiresIn = DEFAULT_EXPIRES_IN_SECONDS): Pr
 
     const config: Config = {
         port: 3100,
+        host: '127.0.0.1',
         fhirBase: `${origin()}/fhir`,
         issuer: `${origin()}/oidc`,
         clientId: CLIENT_ID,
