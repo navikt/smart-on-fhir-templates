@@ -14,7 +14,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        project: [public, client-secret, private-key-jwt, backend-services]
+        project: [client-secret, private-key-jwt, backend-services]
     defaults:
       run:
         working-directory: ${{ matrix.project }}
@@ -22,7 +22,7 @@ jobs:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version-file: ${{ matrix.project }}/.nvmrc
           cache: npm
           cache-dependency-path: ${{ matrix.project }}/package-lock.json
       - run: npm ci
@@ -30,3 +30,49 @@ jobs:
       - run: npm run typecheck
       - run: npm run fmt:check
       - run: npm run lint
+
+  dependabot-merge:
+    needs: test
+    runs-on: ubuntu-latest
+    if: >-
+      github.event_name == 'pull_request'
+      && github.actor == 'dependabot[bot]'
+      && github.event.pull_request.user.login == 'dependabot[bot]'
+      && github.event.pull_request.head.repo.full_name == github.repository
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Dependabot metadata
+        id: metadata
+        uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98 # v3.1.0
+      - name: Merge when every updated dependency is a minor or patch bump
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          UPDATES: ${{ steps.metadata.outputs.updated-dependencies-json }}
+        run: |
+          set -euo pipefail
+          semver='^[0-9]+\.[0-9]+\.[0-9]+$'
+          dirs='^/(client-secret|private-key-jwt|backend-services)$'
+
+          [ -n "$UPDATES" ] && [ "$(jq 'length' <<<"$UPDATES")" -gt 0 ] || { echo "No dependency metadata, leaving for manual review"; exit 0; }
+
+          while IFS=$'\t' read -r name ecosystem directory type prev new; do
+            [[ "$ecosystem" == "npm_and_yarn" ]] || { echo "$name: ecosystem $ecosystem is not auto-merged"; exit 0; }
+            [[ "$directory" =~ $dirs ]] || { echo "$name: directory $directory is not auto-merged"; exit 0; }
+            [[ "$type" == "version-update:semver-minor" || "$type" == "version-update:semver-patch" ]] || { echo "$name: $type needs manual review"; exit 0; }
+            [[ "$prev" =~ $semver && "$new" =~ $semver ]] || { echo "$name: $prev -> $new is not a plain version"; exit 0; }
+            [[ "${prev%%.*}" == "${new%%.*}" ]] || { echo "$name: major changed $prev -> $new"; exit 0; }
+            [[ "$prev" != "$new" && "$(printf '%s\n%s\n' "$prev" "$new" | sort -V | tail -n1)" == "$new" ]] || { echo "$name: $prev -> $new is not an upgrade"; exit 0; }
+          done < <(jq -r '.[] | [.dependencyName, .packageEcosystem, .directory, .updateType, .prevVersion, .newVersion] | @tsv' <<<"$UPDATES")
+
+          files=$(gh api --paginate "repos/$GH_REPO/pulls/$PR_NUMBER/files" --jq '.[].filename')
+          [ -n "$files" ] || { echo "No changed files reported"; exit 0; }
+          while IFS= read -r file; do
+            [[ "$file" =~ ^(client-secret|private-key-jwt|backend-services)/package(-lock)?\.json$ ]] || { echo "$file is not a dependency manifest, leaving for manual review"; exit 0; }
+          done <<<"$files"
+
+          gh pr merge "$PR_NUMBER" --squash --match-head-commit "$HEAD_SHA"
