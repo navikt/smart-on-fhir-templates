@@ -13,24 +13,27 @@
 
 ## Auto-merge
 
-The `dependabot-merge` job in `test.yaml` runs after every test leg passes (`needs: test`) and merges with `gh pr merge --squash`. It fails closed: any condition it cannot confirm leaves the pull request open for review. It merges only when all of these hold:
+[`.github/workflows/dependabot-auto-merge.yaml`](../.github/workflows/dependabot-auto-merge.yaml) is a separate merge-only workflow on `pull_request_target`. It is separate because Dependabot's `pull_request` runs get a read-only token, which cannot merge, see [troubleshooting Dependabot on Actions](https://docs.github.com/en/code-security/reference/supply-chain-security/troubleshoot-dependabot/dependabot-on-actions) and the [fetch-metadata notes](https://github.com/dependabot/fetch-metadata/tree/25dd0e34f4fe68f24cc83900b1fe3fe149efef98#readme). It never checks out or runs pull request code, and `test.yaml` stays read-only.
+
+It only enables [auto-merge](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/configuring-pull-request-merges/managing-auto-merge-for-pull-requests-in-your-repository) (`gh pr merge --auto --squash --match-head-commit`). GitHub then merges once the required checks pass, so the required checks are what gate the merge. The workflow fails closed: anything it cannot confirm leaves the pull request open for review. It enables auto-merge only when all of these hold:
 
 - the workflow actor and the pull request author are both `dependabot[bot]`, and the branch is in this repository
+- the metadata is a non-empty array of well-formed entries (malformed metadata fails the run)
 - the ecosystem is npm, in one of the three folders
 - every updated dependency in the pull request (not only the largest bump) is a minor or patch update, with plain `X.Y.Z` versions, the same major and a higher new version
+- the head commit is unchanged since the run started
 - the pull request changes only `package.json` and `package-lock.json` in those folders
+- the target branch requires the checks `test (client-secret)`, `test (private-key-jwt)` and `test (backend-services)`, read from the branch rules (and from legacy branch protection when the token can see it)
 
-It uses `dependabot/fetch-metadata` for the per-dependency versions and never checks out the pull request code. Actions and devcontainer updates are not auto-merged. Dependabot runs on `pull_request` get a read-only token unless the job requests more, which the job does through `permissions`, see [automating Dependabot with Actions](https://docs.github.com/en/code-security/tutorials/secure-your-dependencies/automate-dependabot-with-actions).
+No required checks means no auto-merge. Actions and devcontainer updates are never auto-merged. Branch rules that Dependabot or an admin can bypass do not protect the merge, so do not add Dependabot as a bypass actor.
 
 ## Settings you configure
 
 These are repository settings that files cannot set:
 
-1. Allow merging pull requests with squash in repository settings.
-2. Add a branch ruleset for `main` that requires the three `test` checks to pass. The job already waits for them, but a ruleset also protects manual merges. See [about rulesets](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/about-rulesets).
+1. Enable **Allow auto-merge** and squash merging in the repository settings.
+2. Add a branch ruleset for `main` that requires the three `test` checks to pass (see above for the names). See [about rulesets](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/managing-rulesets/about-rulesets).
 3. For `@navikt` dependencies, add `PACKAGES_READ_TOKEN` as both an Actions secret and a Dependabot secret, then reference it in `test.yaml` (`NPM_AUTH_TOKEN: ${{ secrets.PACKAGES_READ_TOKEN }}` on the install step) and in a `registries` entry in `dependabot.yml`. Create the token as in [github-packages-token.md](./github-packages-token.md).
-
-If you later enable [auto-merge](https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/configuring-pull-request-merges/managing-auto-merge-for-pull-requests-in-your-repository), note that the job calls a plain squash merge, not `--auto`.
 
 ## Major updates
 

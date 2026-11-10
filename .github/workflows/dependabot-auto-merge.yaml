@@ -1,0 +1,71 @@
+name: Dependabot auto-merge
+
+on:
+  pull_request_target:
+    branches: [main]
+
+permissions: {}
+
+jobs:
+  auto-merge:
+    runs-on: ubuntu-latest
+    if: >-
+      github.actor == 'dependabot[bot]'
+      && github.event.pull_request.user.login == 'dependabot[bot]'
+      && github.event.pull_request.head.repo.full_name == github.repository
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Dependabot metadata
+        id: metadata
+        uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98 # v3.1.0
+      - name: Enable auto-merge when every updated dependency is a minor or patch bump
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          UPDATES: ${{ steps.metadata.outputs.updated-dependencies-json }}
+        run: |
+          set -euo pipefail
+          semver='^[0-9]+\.[0-9]+\.[0-9]+$'
+          dirs='^/(client-secret|private-key-jwt|backend-services)$'
+          checks=('test (client-secret)' 'test (private-key-jwt)' 'test (backend-services)')
+
+          fail() { echo "::error::$1"; exit 1; }
+          hold() { echo "$1, leaving for manual review"; exit 0; }
+
+          jq -e 'type == "array" and length > 0 and all(.[]; type == "object" and ([.dependencyName, .packageEcosystem, .directory, .updateType, .prevVersion, .newVersion] | all(type == "string" and length > 0)))' <<<"$UPDATES" >/dev/null \
+            || fail "Dependabot metadata is missing or malformed"
+          rows=$(jq -r '.[] | [.dependencyName, .packageEcosystem, .directory, .updateType, .prevVersion, .newVersion] | @tsv' <<<"$UPDATES")
+          [ -n "$rows" ] || fail "Dependabot metadata has no dependencies"
+
+          while IFS=$'\t' read -r name ecosystem directory type prev new; do
+            [[ "$ecosystem" == "npm_and_yarn" ]] || hold "$name: ecosystem $ecosystem is not auto-merged"
+            [[ "$directory" =~ $dirs ]] || hold "$name: directory $directory is not auto-merged"
+            [[ "$type" == "version-update:semver-minor" || "$type" == "version-update:semver-patch" ]] || hold "$name: $type needs manual review"
+            [[ "$prev" =~ $semver && "$new" =~ $semver ]] || hold "$name: $prev -> $new is not a plain version"
+            [[ "${prev%%.*}" == "${new%%.*}" ]] || hold "$name: major changed $prev -> $new"
+            [[ "$prev" != "$new" && "$(printf '%s\n%s\n' "$prev" "$new" | sort -V | tail -n1)" == "$new" ]] || hold "$name: $prev -> $new is not an upgrade"
+          done <<<"$rows"
+
+          current=$(gh api "repos/$GH_REPO/pulls/$PR_NUMBER" --jq .head.sha)
+          [ "$current" == "$HEAD_SHA" ] || hold "Head commit changed since this run started"
+
+          files=$(gh api --paginate "repos/$GH_REPO/pulls/$PR_NUMBER/files" --jq '.[].filename')
+          [ -n "$files" ] || hold "No changed files reported"
+          while IFS= read -r file; do
+            [[ "$file" =~ ^(client-secret|private-key-jwt|backend-services)/package(-lock)?\.json$ ]] || hold "$file is not a dependency manifest"
+          done <<<"$files"
+
+          ruleset=$(gh api --paginate "repos/$GH_REPO/rules/branches/$BASE_REF" --jq '.[] | select(.type == "required_status_checks") | .parameters.required_status_checks[].context') \
+            || fail "Cannot read branch rules for $BASE_REF"
+          legacy=$(gh api "repos/$GH_REPO/branches/$BASE_REF/protection/required_status_checks" --jq '(.contexts[]?), (.checks[]?.context)' 2>/dev/null || true)
+          required=$(printf '%s\n%s\n' "$ruleset" "$legacy")
+          for check in "${checks[@]}"; do
+            grep -Fxq -- "$check" <<<"$required" || hold "$BASE_REF does not require the check '$check'"
+          done
+
+          gh pr merge "$PR_NUMBER" --auto --squash --match-head-commit "$HEAD_SHA"
