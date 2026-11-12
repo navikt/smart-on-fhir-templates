@@ -6,7 +6,7 @@ Not production-ready: it runs over HTTP on localhost and holds the token in memo
 
 ## Quickstart
 
-Node 26 (`.nvmrc`, see [install Node](../docs/install-node.md)). Node runs the TypeScript sources directly. In this folder:
+Node 24 (`.nvmrc`, see [install Node](../docs/install-node.md)). Node runs the TypeScript sources directly. No GitHub token is needed. In this folder:
 
 ```sh
 npm ci
@@ -59,7 +59,7 @@ In the [SMART Health IT launcher](https://launch.smarthealthit.org/) (synthetic 
 2. Open **Client Registration & Validation**, enter your **Client ID** and paste the public JWK Set printed by `npm run generate-key`. The launcher cannot fetch a `localhost` JWKS URL, so paste the JSON.
 3. Copy the generated **Server's FHIR Base URL** (it contains `/sim/<encoded>/`) into both `FHIR_BASE_URL` and `AUTH_ISSUER`. Copy it again after any change to the client ID or JWKS, because it encodes them.
 
-The steps follow the launcher's documented fields and have not been checked in a live browser. Other servers need the same facts: `private_key_jwt` with your public JWK Set, grant type `client_credentials` (see the [Backend Services spec](https://hl7.org/fhir/smart-app-launch/backend-services.html)) and the scopes. There is no launch or redirect URL. Changing scopes means registering again.
+The launcher steps follow its documented fields but have not been tested in a live browser. Other servers need `private_key_jwt`, your public JWK Set, the `client_credentials` grant (see the [Backend Services spec](https://hl7.org/fhir/smart-app-launch/backend-services.html)) and the scopes. No launch or redirect URL is needed. Register again after changing scopes.
 
 ## Where to add your app
 
