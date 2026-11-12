@@ -50,7 +50,8 @@ async function setup(t: TestContext, method: AuthMethod): Promise<Harness> {
 
     const directory = await mkdtemp(join(tmpdir(), 'smart-ehr-launch-test-'))
     const privateJwkPath = join(directory, 'private.jwk.json')
-    const publicJwk = method === 'private_key_jwt' ? (await generateKey(privateJwkPath)).publicJwkSet.keys[0] : undefined
+    const publicJwk =
+        method === 'private_key_jwt' ? (await generateKey(privateJwkPath)).publicJwkSet.keys[0] : undefined
 
     function origin(): string {
         return `http://127.0.0.1:${(mock.server.address() as { port: number }).port}`
