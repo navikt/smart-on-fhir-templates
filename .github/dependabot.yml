@@ -1,10 +1,16 @@
 version: 2
+registries:
+  github-packages:
+    type: npm-registry
+    url: https://npm.pkg.github.com
+    token: ${{secrets.DEPENDABOT_PACKAGES_TOKEN}}
 updates:
   - package-ecosystem: npm
     directories:
-      - /client-secret
-      - /private-key-jwt
+      - /ehr-launch
       - /backend-services
+    registries:
+      - github-packages
     schedule:
       interval: weekly
     cooldown:

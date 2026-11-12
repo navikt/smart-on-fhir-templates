@@ -31,7 +31,7 @@ jobs:
           ECOSYSTEM: ${{ steps.metadata.outputs.package-ecosystem }}
         run: |
           set -euo pipefail
-          checks=('test (client-secret)' 'test (private-key-jwt)' 'test (backend-services)')
+          checks=('test (ehr-launch)' 'test (backend-services)')
 
           fail() { echo "::error::$1"; exit 1; }
           hold() { echo "$1, leaving for manual review"; exit 0; }
@@ -42,10 +42,8 @@ jobs:
           current=$(gh api "repos/$GH_REPO/pulls/$PR_NUMBER" --jq .head.sha)
           [ "$current" == "$HEAD_SHA" ] || hold "Head commit changed since this run started"
 
-          ruleset=$(gh api --paginate "repos/$GH_REPO/rules/branches/$BASE_REF" --jq '.[] | select(.type == "required_status_checks") | .parameters.required_status_checks[].context') \
+          required=$(gh api --paginate "repos/$GH_REPO/rules/branches/$BASE_REF" --jq '.[] | select(.type == "required_status_checks") | .parameters.required_status_checks[].context') \
             || fail "Cannot read branch rules for $BASE_REF"
-          legacy=$(gh api "repos/$GH_REPO/branches/$BASE_REF/protection/required_status_checks" --jq '(.contexts[]?), (.checks[]?.context)' 2>/dev/null || true)
-          required=$(printf '%s\n%s\n' "$ruleset" "$legacy")
           for check in "${checks[@]}"; do
             grep -Fxq -- "$check" <<<"$required" || hold "$BASE_REF does not require the check '$check'"
           done
