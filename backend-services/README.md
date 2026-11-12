@@ -6,7 +6,7 @@ Not production-ready: it runs over HTTP on localhost and holds the token in memo
 
 ## Quickstart
 
-Node 26 (`.nvmrc`, see [install Node](../docs/install-node.md)). Node runs the TypeScript sources directly. No GitHub token is needed. In this folder:
+Node 26 (`.nvmrc`, see [install Node](../README.md#install-node)). Node runs the TypeScript sources directly. No GitHub token is needed. In this folder:
 
 ```sh
 npm ci
@@ -77,4 +77,4 @@ npm run typecheck
 
 `test/smoke.test.ts` generates a throwaway key in a temp directory and runs token request and search against an in-process mock server, checking the signed assertion and token reuse. It does not read `.env`.
 
-[Troubleshooting](../TROUBLESHOOTING.md)
+[Troubleshooting](../README.md#troubleshooting)

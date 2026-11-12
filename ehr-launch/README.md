@@ -6,8 +6,8 @@ Not production-ready: sessions are held in server memory, and the app runs over 
 
 ## Prerequisites
 
-- Node 26, see [install Node](../docs/install-node.md).
-- A GitHub token to install the library, because it is published only on GitHub Packages. See [GitHub Packages token](../docs/github-packages-token.md).
+- Node 26, see [install Node](../README.md#install-node).
+- A GitHub token to install the library, because it is published only on GitHub Packages. See [GitHub token](../README.md#github-token).
 
 ## Install
 
@@ -17,7 +17,7 @@ In this folder:
 npm install
 ```
 
-If PowerShell says running scripts is disabled, use `npm.cmd install` (and `npm.cmd start` below). If it fails with 401, the token is missing in this terminal, see [TROUBLESHOOTING.md](../TROUBLESHOOTING.md).
+If PowerShell says running scripts is disabled, use `npm.cmd install` (and `npm.cmd start` below). If it fails with `E401`, the token is unavailable in this terminal. See [troubleshooting](../README.md#troubleshooting).
 
 ## Configure
 
@@ -103,4 +103,4 @@ npm run lint
 
 The tests run launch, callback and the patient page against a local mock server for each client authentication method. They do not read `.env`.
 
-[Troubleshooting](../TROUBLESHOOTING.md)
+[Troubleshooting](../README.md#troubleshooting)
