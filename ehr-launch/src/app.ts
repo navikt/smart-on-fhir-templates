@@ -22,7 +22,10 @@ const CallbackQuerySchema = z.object({
 })
 
 function libraryError(step: string, error: unknown): AppError {
-    return new AppError(400, `SMART ${step} failed with error ${String(error)}. See TROUBLESHOOTING.md.`)
+    return new AppError(
+        400,
+        `SMART ${step} failed with error ${String(error)}. See Troubleshooting in the root README.md.`,
+    )
 }
 
 export async function buildApp(config: Config, storage: SmartStorage = createStorage()): Promise<FastifyInstance> {
