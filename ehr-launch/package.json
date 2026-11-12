@@ -3,7 +3,9 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "engines": { "node": "24.x" },
+  "engines": {
+    "node": ">=26"
+  },
   "scripts": {
     "start": "node --env-file-if-exists=.env src/main.ts",
     "generate-key": "node --env-file-if-exists=.env src/generate-key.ts",
@@ -15,12 +17,12 @@
   },
   "dependencies": {
     "@fastify/cookie": "11.1.5",
-    "@navikt/smart-on-fhir": "1.6.34",
+    "@navikt/smart-on-fhir": "1.6.35",
     "fastify": "5.12.7",
     "zod": "4.6.7"
   },
   "devDependencies": {
-    "@types/node": "24.10.0",
+    "@types/node": "26.6.6",
     "oxfmt": "0.76.0",
     "oxlint": "1.90.0",
     "oxlint-tsgolint": "7.0.2005",

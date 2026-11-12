@@ -1,6 +1,6 @@
 {
     "name": "SMART on FHIR templates",
-    "image": "mcr.microsoft.com/devcontainers/javascript-node:24",
+    "image": "mcr.microsoft.com/devcontainers/javascript-node:26",
     "forwardPorts": [3100],
     "portsAttributes": {
         "3100": { "label": "app", "onAutoForward": "notify" }
