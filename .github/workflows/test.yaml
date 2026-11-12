@@ -7,10 +7,10 @@ on:
 
 permissions:
   contents: read
-  packages: read
 
 jobs:
   test:
+    name: ${{ matrix.project }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -28,7 +28,7 @@ jobs:
           cache-dependency-path: ${{ matrix.project }}/package-lock.json
       - run: npm ci
         env:
-          NPM_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_AUTH_TOKEN: ${{ secrets.READER_TOKEN }}
       - run: npm test
       - run: npm run typecheck
       - run: npm run fmt:check

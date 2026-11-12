@@ -1,51 +1,22 @@
 name: Dependabot auto-merge
 
-on:
-  pull_request_target:
-    branches: [main]
+on: pull_request
 
-permissions: {}
+permissions:
+  contents: write
+  pull-requests: write
 
 jobs:
   auto-merge:
     runs-on: ubuntu-latest
-    if: >-
-      github.actor == 'dependabot[bot]'
-      && github.event.pull_request.user.login == 'dependabot[bot]'
-      && github.event.pull_request.head.repo.full_name == github.repository
-    permissions:
-      contents: write
-      pull-requests: write
+    if: github.event.pull_request.user.login == 'dependabot[bot]'
     steps:
       - name: Dependabot metadata
         id: metadata
         uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98 # v3.1.0
       - name: Enable auto-merge for minor and patch updates
+        if: steps.metadata.outputs.update-type != 'version-update:semver-major'
+        run: gh pr merge --auto --rebase "$PR_URL"
         env:
-          GH_TOKEN: ${{ github.token }}
-          GH_REPO: ${{ github.repository }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-          BASE_REF: ${{ github.event.pull_request.base.ref }}
-          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-          UPDATE_TYPE: ${{ steps.metadata.outputs.update-type }}
-          ECOSYSTEM: ${{ steps.metadata.outputs.package-ecosystem }}
-        run: |
-          set -euo pipefail
-          checks=('test (ehr-launch)' 'test (backend-services)')
-
-          fail() { echo "::error::$1"; exit 1; }
-          hold() { echo "$1, leaving for manual review"; exit 0; }
-
-          [[ "$ECOSYSTEM" == "npm_and_yarn" ]] || hold "Ecosystem '$ECOSYSTEM' is not auto-merged"
-          [[ "$UPDATE_TYPE" == "version-update:semver-minor" || "$UPDATE_TYPE" == "version-update:semver-patch" ]] || hold "Update type '$UPDATE_TYPE' is not auto-merged"
-
-          current=$(gh api "repos/$GH_REPO/pulls/$PR_NUMBER" --jq .head.sha)
-          [ "$current" == "$HEAD_SHA" ] || hold "Head commit changed since this run started"
-
-          required=$(gh api --paginate "repos/$GH_REPO/rules/branches/$BASE_REF" --jq '.[] | select(.type == "required_status_checks") | .parameters.required_status_checks[].context') \
-            || fail "Cannot read branch rules for $BASE_REF"
-          for check in "${checks[@]}"; do
-            grep -Fxq -- "$check" <<<"$required" || hold "$BASE_REF does not require the check '$check'"
-          done
-
-          gh pr merge "$PR_NUMBER" --auto --squash --match-head-commit "$HEAD_SHA"
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
