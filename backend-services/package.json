@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "engines": { "node": ">=26" },
+  "engines": { "node": "24.x" },
   "scripts": {
     "start": "node --env-file-if-exists=.env src/main.ts",
     "generate-key": "node --env-file-if-exists=.env src/generate-key.ts",
@@ -23,7 +23,6 @@
     "oxfmt": "0.76.0",
     "oxlint": "1.90.0",
     "oxlint-tsgolint": "7.0.2005",
-    "tsx": "4.23.15",
     "typescript": "7.0.2"
   }
 }
