@@ -40,14 +40,14 @@ Review the changelog and run the app before merging by hand. You can assign the 
 
 ## Node upgrades
 
-Both apps run on Node 24. Their scripts run TypeScript with Node's built-in [type stripping](https://nodejs.org/api/typescript.html#type-stripping), which allows only erasable syntax (no enums, namespaces or constructor parameter properties).
+Both apps run on Node 26 LTS. Their scripts run TypeScript with Node's built-in [type stripping](https://nodejs.org/api/typescript.html#type-stripping), which allows only erasable syntax (no enums, namespaces or constructor parameter properties).
 
-Move to Node 26 LTS once the published `@navikt/smart-on-fhir` allows it in its `engines`. Check with `npm view @navikt/smart-on-fhir engines` from `ehr-launch/`. Do not force the install or disable `engine-strict`. Then change:
+To move to a new LTS line, check the [release schedule](https://nodejs.org/en/about/previous-releases) and confirm that the published `@navikt/smart-on-fhir` allows it with `npm view @navikt/smart-on-fhir engines` from `ehr-launch/`. Do not force the install or disable `engine-strict`. Then change:
 
 1. `.nvmrc` in `ehr-launch/` and `backend-services/`.
 2. `engines.node` in both `package.json` files.
 3. `@types/node` in both `package.json` files, to the matching major.
 4. The image in [`.devcontainer/devcontainer.json`](../.devcontainer/devcontainer.json).
-5. The Node versions in [docs/install-node.md](./install-node.md).
+5. The Node versions in [docs/install-node.md](./install-node.md) and the READMEs.
 
-Regenerate both lockfiles with that Node version, then run the checks. For later LTS lines, check the [release schedule](https://nodejs.org/en/about/previous-releases) and repeat.
+Regenerate both lockfiles with that Node version, then run the checks.

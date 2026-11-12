@@ -1,6 +1,6 @@
 # Install Node
 
-Both apps use Node 24, set in each folder's `.nvmrc`.
+Both apps use Node 26 LTS, set in each folder's `.nvmrc`.
 
 npm ships with Node. Local Node installs below are per user and do not require administrator rights. If your organisation blocks an option, ask IT rather than bypassing the policy.
 
@@ -49,7 +49,7 @@ Download the zip from the [fnm releases](https://github.com/Schniz/fnm/releases)
 
 ### 3. Portable Node zip
 
-1. Download the Windows x64 zip from [latest-v24.x](https://nodejs.org/dist/latest-v24.x/). The same page lists `SHASUMS256.txt`.
+1. Download the Windows x64 zip from [latest-v26.x](https://nodejs.org/dist/latest-v26.x/). The same page lists `SHASUMS256.txt`.
 2. Compare the hash with the line for your zip file:
 
    ```powershell
@@ -80,7 +80,7 @@ On a portable Node zip install, `npm.cmd` is in the Node folder you put on `PATH
 
 ## Codespaces
 
-[GitHub Codespaces](https://docs.github.com/en/codespaces) gives you a ready Node 24 container from this repository's `.devcontainer/devcontainer.json`.
+[GitHub Codespaces](https://docs.github.com/en/codespaces) gives you a ready Node 26 container from this repository's `.devcontainer/devcontainer.json`.
 
 - Choose a European machine location when creating the codespace, or set your [default region](https://docs.github.com/en/codespaces/setting-your-user-preferences/setting-your-default-region-for-github-codespaces). GitHub is a US company. Follow your organisation's rules and use synthetic data only.
 - The devcontainer forwards port 3100. Run `npm install` in the app folder you choose.

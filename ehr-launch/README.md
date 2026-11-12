@@ -6,7 +6,7 @@ Not production-ready: sessions are held in server memory, and the app runs over 
 
 ## Prerequisites
 
-- Node 24, see [install Node](../docs/install-node.md).
+- Node 26, see [install Node](../docs/install-node.md).
 - A GitHub token to install the library, because it is published only on GitHub Packages. See [GitHub Packages token](../docs/github-packages-token.md).
 
 ## Install

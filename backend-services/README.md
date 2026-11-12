@@ -6,7 +6,7 @@ Not production-ready: it runs over HTTP on localhost and holds the token in memo
 
 ## Quickstart
 
-Node 24 (`.nvmrc`, see [install Node](../docs/install-node.md)). Node runs the TypeScript sources directly. No GitHub token is needed. In this folder:
+Node 26 (`.nvmrc`, see [install Node](../docs/install-node.md)). Node runs the TypeScript sources directly. No GitHub token is needed. In this folder:
 
 ```sh
 npm ci

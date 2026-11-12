@@ -4,10 +4,10 @@ Templates for learning and prototyping [SMART on FHIR](https://hl7.org/fhir/smar
 
 | Folder | Flow | Client authentication | Node |
 |---|---|---|---|
-| [ehr-launch/](./ehr-launch/) | EHR launch with patient and encounter context | `none`, `client_secret_basic` or `private_key_jwt`, set in `.env` | 24 |
-| [backend-services/](./backend-services/) | `client_credentials`, no user | `private_key_jwt` | 24 |
+| [ehr-launch/](./ehr-launch/) | EHR launch with patient and encounter context | `none`, `client_secret_basic` or `private_key_jwt`, set in `.env` | 26 |
+| [backend-services/](./backend-services/) | `client_credentials`, no user | `private_key_jwt` | 26 |
 
-`ehr-launch/` uses [`@navikt/smart-on-fhir`](https://github.com/navikt/smart-on-fhir), a library under active development. `backend-services/` implements the token request itself because the library does not support `client_credentials`. Installing the library requires a [GitHub token](./docs/github-packages-token.md). Both apps move to Node 26 LTS once the library supports it.
+`ehr-launch/` uses [`@navikt/smart-on-fhir`](https://github.com/navikt/smart-on-fhir), a library under active development. `backend-services/` implements the token request itself because the library does not support `client_credentials`. Installing the library requires a [GitHub token](./docs/github-packages-token.md).
 
 ## Get started
 

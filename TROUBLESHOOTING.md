@@ -4,7 +4,7 @@
 |---|---|
 | `Configuration problem in .env` | Fix the listed variables, see the Configure step in your folder's README |
 | `npm ci`, `npm install` or `npm start` says the Node version is not supported | Use the version in the folder's `.nvmrc`, see [docs/install-node.md](./docs/install-node.md) |
-| `npm install` in `ehr-launch/` fails with `E401`, `Unauthorized` or a warning that `NPM_AUTH_TOKEN` could not be replaced | The GitHub Packages token is missing, expired or not visible to this terminal. See [docs/github-packages-token.md](./docs/github-packages-token.md#check) and open a new terminal after setting it |
+| `npm install` in `ehr-launch/` fails with `E401` and `unauthenticated: User cannot be authenticated with the token provided` | The GitHub Packages token is missing, expired or not visible to this terminal. See [docs/github-packages-token.md](./docs/github-packages-token.md#check) and open a new terminal after setting it |
 | `invalid_client` or unknown client | Register the client ID, auth method and redirect URI with the SMART server. They must match the app's settings |
 | `SMART launch failed with error ...` | The launch `iss` probably differs from `FHIR_BASE_URL`. Set `FHIR_BASE_URL` to the EHR's FHIR base URL, exactly as the EHR sends it (for the launcher: `https://launch.smarthealthit.org/v/r4/fhir`) |
 | `SMART callback failed with error ...` mentioning state | The launch is stale or was started in another tab or browser. Launch again from the EHR |
