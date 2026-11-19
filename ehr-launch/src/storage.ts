@@ -1,4 +1,4 @@
-import type { SmartStorage } from '@navikt/smart-on-fhir/client'
+import type { SmartStorage } from '@navikt/smart-on-fhir/smart'
 
 const ENTRY_TTL_MS = 60 * 60 * 1000
 const MAX_ENTRIES = 1000

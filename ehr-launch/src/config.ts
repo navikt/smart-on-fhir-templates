@@ -1,4 +1,4 @@
-import type { KnownFhirServer } from '@navikt/smart-on-fhir/client'
+import type { KnownFhirServer } from '@navikt/smart-on-fhir/smart'
 import { readFileSync } from 'node:fs'
 import { z } from 'zod'
 

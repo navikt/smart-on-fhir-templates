@@ -1,5 +1,5 @@
 import cookie from '@fastify/cookie'
-import { SmartClient, type SmartStorage } from '@navikt/smart-on-fhir/client'
+import { SmartClient, type SmartStorage } from '@navikt/smart-on-fhir/smart'
 import Fastify, { LogController, type FastifyInstance } from 'fastify'
 import { z } from 'zod'
 

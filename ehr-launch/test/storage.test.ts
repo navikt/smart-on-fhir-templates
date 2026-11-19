@@ -1,4 +1,4 @@
-import type { SmartStorage } from '@navikt/smart-on-fhir/client'
+import type { SmartStorage } from '@navikt/smart-on-fhir/smart'
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
